@@ -40,9 +40,7 @@ let modelLabels = [];              // All Labels returned from the model.
 let hasSetVideoPauseTimer = false; // True if the video has been paused
 let lastClassifyTime = 0;          // Used to create a set interval between classification without using setTimeout()
 let isModelLoaded = false;
-let lastClassifiedImage = null; // serves as a sentinel to keep from running the lassifier to frequently and also stores the last image sent to the classifier
-
-
+let lastClassifiedImage = null; // serves as a sentinel to keep from running the classifier to frequently and also stores the last image sent to the classifier
 
 /*----------------------------------------------------------------------------------- */
 /* Serail Port Initialization                                                         */
@@ -195,7 +193,6 @@ function setConnectButtonText(text) {
 
 /**
  * Create the button at the top right of the screen that allows the user to connect to the serial port
- * @returns {Clickable}
  */
 function setupConnectButton() {
   if (connectButton) {
@@ -206,12 +203,8 @@ function setupConnectButton() {
   connectButton = createButton(connectLabel);
   connectButton.position(width - 200, 20);
   connectButton.id("connectButton");
-  connectButton.style("height", "40px");
-  connectButton.style("border-width", "0px");
-  connectButton.style("background-color", bgColor);
-  connectButton.style("font-size", "18px");
-  connectButton.style("width", "200px");
-  connectButton.style("color", "#1967D2");
+  connectButton.class("button"); // see style.css for styling
+  
   connectButton.mouseClicked(() => {
     if (!serialPort.opened()) {
       console.log("Opening serial port");
@@ -242,6 +235,40 @@ function ensureTrailingSlash(url) {
 }
 
 /**
+ * Called when the model metadata is successfully fetched.
+ * 
+ * @param {Object} response - The response object containing the model metadata.
+ */
+function modelFetchSuccess(response) {
+  if (!response.labels || !Array.isArray(response.labels) || response.labels.length <= 2) {
+    alert(
+      "Train a model with at least three classes: one for each type of object you want to sort, and one for the empty sorter"
+    );
+    isModelLoaded = false;
+  } else {
+    modelLabels = response.labels;
+    makeClassificationLabelsVisible();
+    if (modelLabels.length > 1) {
+      setLoadModelButtonText("MODEL LOADED");
+      setTimeout(() => {
+        setLoadModelButtonText("REFRESH MODEL");
+      }, 3000);
+    }
+    isModelLoaded = true;
+  }
+}
+
+/**
+ * Set the text of the load model button in the DOM.
+ * @param {string} text 
+ */
+function setLoadModelButtonText(text) {
+  const loadModelButton = document.querySelector("#loadModel");
+  if (loadModelButton) {
+    loadModelButton.textContent = text;
+  }
+}
+/**
  * Create the load model button. Called for first time setup only.
  */
 function setupLoadModelButton() {
@@ -250,50 +277,40 @@ function setupLoadModelButton() {
     loadModelButton = null;
   }
 
-  loadModelButton = new Clickable();
-  loadModelButton.resize(145, 40);
-  loadModelButton.locate(300, 15);
-  loadModelButton.strokeWeight = 0;
-  loadModelButton.color = bgColor;
-  loadModelButton.text = "LOAD MODEL";
-  loadModelButton.textSize = 18;
-  loadModelButton.textColor = "#1967d2";
-  loadModelButton.onPress = () => {
+  loadModelButton = createButton("LOAD MODEL");
+  loadModelButton.id("loadModelButton");
+  loadModelButton.class("button"); // see style.css for styling
+  loadModelButton.position(300, 15);
+
+
+  loadModelButton.mouseClicked(() => {
     try {
       let modelUrl = ensureTrailingSlash(modelInput.value());
       console.log(`Loading Tensorflow Model at: ${modelUrl}`);
       classifier = ml5.imageClassifier(modelUrl + "model.json");
-
+      let metadataUrl = modelUrl + "metadata.json";
       httpGet(
-        modelUrl + "metadata.json",
-        "json",
-        false,
-        (response) => {
-          if (response.labels.length <= 2) {
-            alert(
-              "Train a model with at least three classes: one for each type of object you want to sort, and one for the empty sorter"
-            );
-
-          } else {
-            modelLabels = response.labels;
-            isModelLoaded = true;
-            makeClassificationLabelsVisible();
-
-          }
-        },
-        (error) => alert("invalid TM2 url")
+        metadataUrl,  // path
+        "json", // datatype
+        false, // data
+        modelFetchSuccess, // callback on success
+        (error) => {
+          alert(`Error fetching Teachable Machine2 resource ${metadataUrl}: ${error}`);
+          setLoadModelButtonText("ERROR LOADING MODEL");
+          isModelLoaded = false;
+          setTimeout(() => {
+            setLoadModelButtonText("LOAD MODEL");
+          }, 3000);
+        }
       );
     } catch (e) {
-      loadModelButton.text = "INVALID URL";
-    }
-    if (modelLabels.length > 1) {
-      loadModelButton.text = "MODEL LOADED";
+      setLoadModelButtonText("ERROR LOADING MODEL");
+      isModelLoaded = false;
       setTimeout(() => {
-        loadModelButton.text = "REFRESH MODEL";
+        setLoadModelButtonText("LOAD MODEL");
       }, 3000);
-
     }
-  };
+  });
 }  // end setupLoadModelButton()
 
 /**
@@ -371,12 +388,9 @@ function setupEditCodeLink() {
     "_blank"
   );
   editCodeLink.position(width - 110, height - 40);
-  editCodeLink.style("height", "40px");
-  editCodeLink.style("border-width", "0px");
-  editCodeLink.style("background-color", bgColor);
-  editCodeLink.style("font-size", "18px");
-  editCodeLink.style("width", "200px");
-  editCodeLink.style("color", "#1967D2");
+  editCodeLink.id("editCodeLink");
+
+
 } // end setupEditCodeLink()
 
 /**
@@ -389,16 +403,8 @@ function setupModelInput() {
   }
 
   modelInput = createInput();
-
+  modelInput.id("modelInput"); // see style.css for styling
   modelInput.position(20, 20);
-  modelInput.style("height", "35px");
-  modelInput.style("width", "267px");
-  modelInput.style("border-width", "0px");
-  modelInput.style("border-radius", "4px 4px 0px 0px");
-  modelInput.style("border-bottom", "2px solid #1967d2");
-  modelInput.style("font-size", "16px");
-  modelInput.style("padding-left", "5px");
-  modelInput.style("color", "#669df6");
   modelInput.attribute("placeholder", "Paste model link here");
 } // end setupModelInput()
 
@@ -523,7 +529,6 @@ function draw() {
     leftPhotoGrid.draw();
     rightPhotoGrid.draw();
     rectMode(CORNER);
-    loadModelButton.draw();
 
     classificationBar.draw();
     leftClassificationLabel.draw();
