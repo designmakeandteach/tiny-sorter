@@ -1,4 +1,13 @@
 /**
+ * Derived from Google Experiment Tiny Sorter project.
+ * https://experiments.withgoogle.com/tiny-sorter
+ * 
+ * Modifications Coyright 2025 Eric Z. Ayers
+ * Distributed under the MIT License.
+ */
+
+
+/**
  * A p5 element that renders around the classification label when a classification is detected.
  * @param {number} x 
  * @param {number} y 
@@ -17,12 +26,11 @@ class Splash {
     this.color = color(22, 79, 200);
     this.isExploding = false;
     // TODO(zundel): factor out this isInbetweenUpdates for some better animation logic
-    this.isInbetweenUpdates = false;
     this.explosionRadius = 100;
     this.explosionIndex = 0;
     this.maxExplosions = 4;
     this.radius = radius;
-    this.lastTriggerTime = 0;
+    this.lastTriggerTime = this.lastTriggerDelayTime = this.triggerDelay = this.triggerDuration = 0;
   }
 
   /**
@@ -32,7 +40,7 @@ class Splash {
     if (!this.isExploding) {
       this.explosionIndex = 0;
       this.isExploding = true;
-      this.lastTriggerTime = Date.now();
+      this.lastTriggerTime =  this.lastTriggerDelayTime = Date.now();
       this.triggerDelay = delay;
       this.triggerDuration = duration;
     }
@@ -57,20 +65,18 @@ class Splash {
       this.height + size_offset,
       this.radius);
 
-    // Animate the explosion
-    if (!this.isInbetweenUpdates) {
-      setTimeout(() => {
-        this.explosionIndex = (this.explosionIndex + 1) % this.maxExplosions;
-        this.isInbetweenUpdates = false;
-      }, this.triggerDelay);
-      this.isInbetweenUpdates = true;
+    // Animate the explosionD
+    if (Date.now() - this.lastTriggerDelayTime > this.triggerDelay) {
+      this.explosionIndex = (this.explosionIndex + 1) % this.maxExplosions;
+      this.lastTriggerDelayTime = Date.now();
+    }
 
-      if (Date.now() - this.lastTriggerTime > this.triggerDuration) {
-        this.isExploding = false;
-      }
+    if (Date.now() - this.lastTriggerTime > this.triggerDuration) {
+      this.isExploding = false;
     }
   }
 }
+
 
 /**
  * A p5 element that renders the classification label.

@@ -1,4 +1,12 @@
 /**
+ * Derived from Google Experiment Tiny Sorter project.
+ * https://experiments.withgoogle.com/tiny-sorter
+ * 
+ * Modifications Coyright 2025 Eric Z. Ayers
+ * Distributed under the MIT License.
+ */
+
+/**
  * A p5 Element that renders grid of images that can be used to 
  * display a set of images.
  * 
@@ -46,9 +54,6 @@ class PhotoGrid {
           this.y + (this.imageSize + this.padding) * row,
           this.imageSize,
           this.imageSize,
-          3,
-          3,
-          3,
           3
         );
 

@@ -1,3 +1,13 @@
+/**
+ * Webpage to control the Tiny Sorter project.
+ * See https://designmakeandteach.com/projecdts/tiny-sorter/ for how to use this in a classroom.
+ * 
+ * Derived from Google Experiment Tiny Sorter project.
+ * https://experiments.withgoogle.com/tiny-sorter
+ * 
+ * Modifications Coyright 2025 Eric Z. Ayers
+ * Distributed under the MIT License.
+ */
 const connectLabel = "CONNECT MICROPROCESSOR"
 const disconnectLabel = "DISCONNECT MICROPROCESSOR"
 const classifyDelay = 100;
@@ -26,16 +36,28 @@ let rightClassificationLabel;
 let editCodeLink;
 
 // Other State
-let isLeftPic;
-let modelLabels = [];
+let modelLabels = [];              // All Labels returned from the model.
 let hasSetVideoPauseTimer = false; // True if the video has been paused
-let lastClassifyTime = 0;
+let lastClassifyTime = 0;          // Used to create a set interval between classification without using setTimeout()
 let isModelLoaded = false;
 let lastClassifiedImage = null; // serves as a sentinel to keep from running the lassifier to frequently and also stores the last image sent to the classifier
 
+
+
+/*----------------------------------------------------------------------------------- */
+/* Serail Port Initialization                                                         */
+/*----------------------------------------------------------------------------------- */
+
+/**
+ * Initialize the WebSerial object.
+ * 
+ * If the port is already open, it will be reused. Otherwise,
+ * The user must click on the connectButton to choose a port.
+ * 
+ * @returns {Serial} The serial port object.
+ */
 function initSerialPort() {
   let port = createSerial();
-
   let usedPorts = usedSerialPorts();
   if (usedPorts.length > 0) {
     port.open(usedPorts[0], 9600);
@@ -43,6 +65,99 @@ function initSerialPort() {
   }
   return port;
 }
+
+
+/*----------------------------------------------------------------------------------- */
+/* Video and Model Functions                                                          */
+/*----------------------------------------------------------------------------------- */
+
+function getVideoImage() {
+  //return video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
+  return video.get();
+}
+
+function pauseVideo() {
+  if (!hasSetVideoPauseTimer) {
+    hasSetVideoPauseTimer = true;
+    video.pause();
+    setTimeout(() => {
+      video.play();
+      hasSetVideoPauseTimer = false;
+    }, videoPauseDelay);
+  }
+}
+
+// The results are in an array ordered by confidence.
+// console.log(results[0]);
+function updateClassification(results) {
+  // console.log(results);
+  const class1 = results.filter((objs) => {
+    if (objs.label === modelLabels[0]) {
+      return objs;
+    }
+  });
+
+  const class2 = results.filter((objs) => {
+    if (objs.label === modelLabels[1]) {
+      return objs;
+    }
+  });
+
+  classificationBar.setConfidenceLeft(class1[0].confidence);
+  classificationBar.setConfidenceRight(class2[0].confidence);
+
+  if (class1[0].confidence > 0.9) {
+    try {
+      if (serialPort.opened()) {
+        console.log("Sending Class 2 Detected")
+        serialPort.write("2");
+      }
+      rightClassificationLabel.triggerSplash();
+      if (lastClassifiedImage) {
+        rightPhotoGrid.addImage(lastClassifiedImage);
+      }
+      pauseVideo();
+    } catch (e) { }
+  } else if (class2[0].confidence > 0.9) {
+    try {
+      if (serialPort.opened()) {
+        console.log("Sending Class 1 Detected")
+        serialPort.write("1");
+      }
+      leftClassificationLabel.triggerSplash();
+      if (lastClassifiedImage) {
+        leftPhotoGrid.addImage(lastClassifiedImage);
+      }
+      pauseVideo();
+    } catch (e) { }
+  }
+}
+
+function processClassificationResult(error, results) {
+  // If there is an error
+  if (error) {
+    console.error(`Error classifying image: ${error}`);
+  } else {
+    updateClassification(results);
+  }
+  // Reset the last classified image so we can classify again
+  lastClassifiedImage = null;
+}
+
+// Get a prediction for the current video frame.
+//
+// TODO(zundel): The original code sent a cropped image to the classifier.
+// That saves on the image size, but to my knowledge, the model was trained on the full image.
+function classifyVideo() {
+  if (isModelLoaded && lastClassifiedImage === null && !hasSetVideoPauseTimer) {
+    lastClassifiedImage = getVideoImage();
+    classifier.classify(lastClassifiedImage, processClassificationResult);
+  }
+}
+
+/*----------------------------------------------------------------------------------- */
+/* UI Setup Functions                                                                 */
+/*----------------------------------------------------------------------------------- */
 
 function setConnectButtonText(text) {
   const connectButton = document.querySelector("#connect");
@@ -280,13 +395,13 @@ function setupTestMode() {
     addLeftPhotoButton = createButton("Add Left");
     addLeftPhotoButton.position(0, height / 2);
     addLeftPhotoButton.mousePressed(() => {
-      leftPhotoGrid.addImage(getCroppedVideoImage());
+      leftPhotoGrid.addImage(getVideoImage());
     });
     addRightPhotoButton = createButton("Add Right");
     addRightPhotoButton.style("width", "100px");
     addRightPhotoButton.position(width - 100, height / 2);
     addRightPhotoButton.mousePressed(() => {
-      rightPhotoGrid.addImage(getCroppedVideoImage());
+      rightPhotoGrid.addImage(getVideoImage());
     });
 
     // seed the model URL
@@ -294,6 +409,15 @@ function setupTestMode() {
   }
 } // end setupTestMode()
 
+
+
+/*----------------------------------------------------------------------------------- */
+/* UI functions called by P5                                                          */
+/*----------------------------------------------------------------------------------- */
+
+/**
+ * Called by p5 when the page is loaded. Initialize the UI here.
+ */
 function setup() {
   createCanvas(window.innerWidth, window.innerHeight);
   // Create the video
@@ -318,8 +442,10 @@ function setup() {
   serialPort = initSerialPort();
 } // end setup()
 
+/**
+ * Called by p5 to redraw the Canvas.
+ */
 function draw() {
-  //   Darker BG
   if (width > 700) {
     background(bgColor);
 
@@ -374,89 +500,11 @@ function draw() {
     classifyVideo();
     lastClassifyTime = Date.now();
   }
-}
+} // end draw()
 
-function getCroppedVideoImage() {
-  //return video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
-  return video.get();
-}
-
-function pauseVideo() {
-  if (!hasSetVideoPauseTimer) {
-    hasSetVideoPauseTimer = true;
-    video.pause();
-    setTimeout(() => {
-      video.play();
-      hasSetVideoPauseTimer = false;
-    }, videoPauseDelay);
-  }
-}
-
-// The results are in an array ordered by confidence.
-// console.log(results[0]);
-function updateClassification(results) {
-  // console.log(results);
-  const class1 = results.filter((objs) => {
-    if (objs.label === modelLabels[0]) {
-      return objs;
-    }
-  });
-
-  const class2 = results.filter((objs) => {
-    if (objs.label === modelLabels[1]) {
-      return objs;
-    }
-  });
-
-  classificationBar.setConfidenceLeft(class1[0].confidence);
-  classificationBar.setConfidenceRight(class2[0].confidence);
-
-  if (class1[0].confidence > 0.9) {
-    try {
-      if (serialPort.opened()) {
-        console.log("Sending Class 2 Detected")
-        serialPort.write("2");
-      }
-      rightClassificationLabel.triggerSplash();
-      if (lastClassifiedImage) {
-        rightPhotoGrid.addImage(lastClassifiedImage);
-      }
-      pauseVideo();
-    } catch (e) { }
-  } else if (class2[0].confidence > 0.9) {
-    try {
-      if (serialPort.opened()) {
-        console.log("Sending Class 1 Detected")
-        serialPort.write("1");
-      }
-      leftClassificationLabel.triggerSplash();
-      if (lastClassifiedImage) {
-        leftPhotoGrid.addImage(lastClassifiedImage);
-      }
-      pauseVideo();
-    } catch (e) { }
-  }
-}
-
-function processClassificationResult(error, results) {
-  // If there is an error
-  if (error) {
-    console.error(`Error classifying image: ${error}`);
-  } else {
-    updateClassification(results);
-  }
-  // Reset the last classified image so we can classify again
-  lastClassifiedImage = null;
-}
-
-// Get a prediction for the current video frame
-function classifyVideo() {
-  if (isModelLoaded && lastClassifiedImage === null && !hasSetVideoPauseTimer) {
-    lastClassifiedImage = getCroppedVideoImage();
-    classifier.classify(lastClassifiedImage, processClassificationResult);
-  }
-}
-
+/**
+ * Called by p5 when the window is resized.
+ */
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight, true);
   clear();
