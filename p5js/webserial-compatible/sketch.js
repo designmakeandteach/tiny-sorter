@@ -1,53 +1,36 @@
 
-
-
-
 const connectLabel = "CONNECT MICROPROCESSOR"
 const disconnectLabel = "DISCONNECT MICROPROCESSOR"
-// Classifier Variable
+
+// Machine Learning Model Instance
 let classifier;
-let input;
-// Model URL
-let imageModel = "https://teachablemachine.withgoogle.com/models/9L4-MDs0/";
 
-// Video
-let video;
-let videoSize;
-let classificationIndicator;
+// Serial Port connected to the micro-controller
+let serialPort;
 
-let leftGrid;
-let rightGrid;
-
-let isLeftPic;
-
-let leftClassificationLabel;
-let rightClassificationLabel;
-
-let cameraBorder;
-let putSorter;
-
-let editCode;
-let connect;
-
-let bgColor = "#e8f0fe";
-let port;
-let shouldFreezeFrame;
+// UI Elements
 let modeInput;
 let loadModel;
+let cameraBorder;
+let putSorter;
+let connectButton;
+let classificationBar;
+let leftGrid;
+let video;
+let rightGrid;
+let leftClassificationLabel;
+let rightClassificationLabel;
+let editCode;
+
+// Other State
+let isLeftPic;
+let videoSize;
+let bgColor = "#e8f0fe";
+let shouldFreezeFrame;
 let labels = [];
-let isLeftClassSelected = false;
-let isRightClassSelected = false;
-
 let hasSetPauseTimer;
-
-let label = "";
 let isModelLoaded = false;
 let enteredText = "";
-
-
-function myInputEvent() {
-  enteredText = this.value().trim();
-}
 
 function initSerialPort() {
   let port = createSerial();
@@ -68,37 +51,36 @@ function setConnectButtonText(text) {
 }
 
 /**
- * Callback function for the connect button
- */
-function connectClicked() {
-  if (!serialPort.opened()) {
-    console.log("Opening serial port");
-    serialPort.open(9600);
-    setConnectButtonText(disconnectLabel);
-  } else {
-    console.log("Closing serial port");
-    serialPort.close();
-    setConnectButtonText(connectLabel);
-  }
-}
-
-/**
  * Create the button at the top right of the screen that allows the user to connect to the serial port
  * @returns {Clickable}
  */
 function setupConnectButton() {
+  connectButton = createButton(connectLabel);
+  connectButton.position(width - 200, 20);
+  connectButton.id("connectButton");
+  connectButton.style("height", "40px");
+  connectButton.style("border-width", "0px");
+  connectButton.style("background-color", bgColor);
+  connectButton.style("font-size", "18px");
+  connectButton.style("width", "200px");
+  connectButton.style("color", "#1967D2");
+  connectButton.mouseClicked(() => {
+    if (!serialPort.opened()) {
+      console.log("Opening serial port");
+      serialPort.open(9600);
+      setConnectButtonText(disconnectLabel);
+    } else {
+      console.log("Closing serial port");
+      serialPort.close();
+      setConnectButtonText(connectLabel);
+    }
+  });
 
-  let connect = createButton(connectLabel);
-  connect.position(width - 200, 20);
-  connect.id("connect");
-  connect.style("height", "40px");
-  connect.style("border-width", "0px");
-  connect.style("background-color", bgColor);
-  connect.style("font-size", "18px");
-  connect.style("width", "200px");
-  connect.style("color", "#1967D2");
-  connect.mouseClicked(connectClicked);
-  return connect;
+  if (serialPort && serialPort.opened()) {
+    setConnectButtonText(disconnectLabel);
+  } else {
+    setConnectButtonText(connectLabel);
+  }
 }
 
 /**
@@ -112,7 +94,6 @@ function setupTestMode() {
 
   // Add extra UI tif we are testing
   if (test) {
-
     // Add classification label test buttons
     addLeftClassificationLabelButton = createButton("Add Left Class");
     addLeftClassificationLabelButton.position(0, height / 3.3);
@@ -177,15 +158,13 @@ function setupLoadModelButton() {
             alert(
               "Train a model with at least three classes: one for each type of object you want to sort, and one for the empty sorter"
             );
-          
+
           } else {
             labels = response.labels;
             isModelLoaded = true;
             classifyVideo();
-            leftClassificationLabel.value(labels[1]);
-            rightClassificationLabel.value(labels[0]);
-            leftClassificationLabel.visible(true);
-            rightClassificationLabel.visible(true);
+            makeClassificationLabelsVisible();
+
           }
         },
         (error) => alert("invalid TM2 url")
@@ -203,17 +182,29 @@ function setupLoadModelButton() {
   };
 }  // end setupLoadModelButton()
 
+function makeClassificationLabelsVisible() {
+  leftClassificationLabel.value(labels[1]);
+  rightClassificationLabel.value(labels[0]);
+  leftClassificationLabel.visible(true);
+  rightClassificationLabel.visible(true);
+}
+
 function setupClassificationBarAndLabels() {
+
   const classificationLabelY = height / 3.3;
-  const classificationLabelXLeft = width / 2 - 314; 
+  const classificationLabelXLeft = width / 2 - 314;
   const classificationLabelXRight = width / 2 + 314;
   const classificationLabelWidth = 200;
   const classificationLabelHeight = 48;
   const classificationLabelRadius = 9;
 
-  classificationIndicator = new ClassificationBar(width / 2, classificationLabelY, min(width / 4, 341), 28, 5);
+  classificationBar = new ClassificationBar(width / 2, classificationLabelY, min(width / 4, 341), 28, 5);
   leftClassificationLabel = new ClassificationLabel(classificationLabelXLeft, classificationLabelY, classificationLabelWidth, classificationLabelHeight, classificationLabelRadius, true);
-  rightClassificationLabel = new ClassificationLabel(classificationLabelXRight, classificationLabelY, classificationLabelWidth, classificationLabelHeight, classificationLabelRadius, false);;
+  rightClassificationLabel = new ClassificationLabel(classificationLabelXRight, classificationLabelY, classificationLabelWidth, classificationLabelHeight, classificationLabelRadius, false);
+
+  if (isModelLoaded) {
+    makeClassificationLabelsVisible();
+  }
 } // end setupClassificationBarAndLabels()
 
 function setupPhotoGrids() {
@@ -242,27 +233,11 @@ function setupEditCodeLink() {
   editCode.style("color", "#1967D2");
 } // end setupEditCodeLink()
 
-function setup() {
-  createCanvas(window.innerWidth, window.innerHeight);
-  // Create the video
-  videoSize = 250;
-  video = createCapture(VIDEO);
-  video.hide();
-
-  cameraBorder = loadImage("camera_border.png");
-  putsorter = loadImage("put_sorter.png");
-
-  setupLoadModelButton();
-  setupPhotoGrids();
-  setupClassificationBarAndLabels();
-
-  shouldFeezeFrame = false;
-  hasSetPauseTimer = false;
-
-
+function setupModelInput() {
   modelInput = createInput();
-  modelInput.input(myInputEvent);
-
+  modelInput.input(() => {
+    enteredText = this.value().trim();
+  });
   modelInput.position(20, 20);
   modelInput.style("height", "35px");
   modelInput.style("width", "267px");
@@ -273,18 +248,38 @@ function setup() {
   modelInput.style("padding-left", "5px");
   modelInput.style("color", "#669df6");
   modelInput.attribute("placeholder", "Paste model link here");
+} // end setupModelInput()
 
-  connect = setupConnectButton();
-  serialPort = initSerialPort();
 
+function setup() {
+  createCanvas(window.innerWidth, window.innerHeight);
+  // Create the video
+  videoSize = 250;
+  video = createCapture(VIDEO);
+  video.hide();
+  shouldFeezeFrame = false;
+  hasSetPauseTimer = false;
+
+  cameraBorder = loadImage("camera_border.png");
+  putsorter = loadImage("put_sorter.png");
+
+  // Initialize UI Components
+  setupLoadModelButton();
+  setupModelInput();
+  setupConnectButton();
+  setupPhotoGrids();
+  setupClassificationBarAndLabels();
   setupEditCodeLink();
+  setupTestMode();
+
+  // Initialize the serial port
+  serialPort = initSerialPort();
 
   // Start classifying
   if (isModelLoaded) {
     classifyVideo();
   }
 
-  setupTestMode();
 } // end setup()
 
 function draw() {
@@ -344,7 +339,7 @@ function draw() {
     rectMode(CORNER);
     loadModel.draw();
 
-    classificationIndicator.render();
+    classificationBar.render();
     leftClassificationLabel.render();
     rightClassificationLabel.render();
 
@@ -376,14 +371,14 @@ function updateClassification(results) {
     }
   });
 
-  classificationIndicator.setConfidenceLeft(class1[0].confidence);
-  classificationIndicator.setConfidenceRight(class2[0].confidence);
+  classificationBar.setConfidenceLeft(class1[0].confidence);
+  classificationBar.setConfidenceRight(class2[0].confidence);
 
   if (class1[0].confidence > 0.9) {
     try {
       if (serialPort.opened()) {
-        console.log("Sending Class 1 Detected")
-        serialPort.write("1");
+        console.log("Sending Class 2 Detected")
+        serialPort.write("2");
       }
       shouldFreezeFrame = true;
       rightClassificationLabel.triggerSplash();
@@ -393,8 +388,8 @@ function updateClassification(results) {
   } else if (class2[0].confidence > 0.9) {
     try {
       if (serialPort.opened()) {
-        console.log("Sending Class 2 Detected")
-        serialPort.write("2");
+        console.log("Sending Class 1 Detected")
+        serialPort.write("1");
       }
       shouldFreezeFrame = true;
       leftClassificationLabel.triggerSplash();
@@ -436,7 +431,7 @@ function windowResized() {
   rightGrid.images = rightPhotos;
 
   setupClassificationBarAndLabels();
-
+  setupConnectButton();
   setupEditCodeLink();
 
 }
