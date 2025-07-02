@@ -29,7 +29,7 @@ class PhotoGrid {
     }
   } // end addImage()
 
-  render() {
+  draw() {
     let imageIndex = 0;
     for (let row = 0; row < this.numRows; row++) {
       for (let col = 0; col < this.numCols; col++) {
@@ -62,5 +62,5 @@ class PhotoGrid {
         );
       }
     }
-  } // end render()
+  } // end draw()
 }

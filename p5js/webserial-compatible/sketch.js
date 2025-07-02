@@ -1,4 +1,3 @@
-
 const connectLabel = "CONNECT MICROPROCESSOR"
 const disconnectLabel = "DISCONNECT MICROPROCESSOR"
 
@@ -162,8 +161,8 @@ function setupClassificationBarAndLabels() {
   const classificationLabelRadius = 9;
 
   classificationBar = new ClassificationBar(width / 2, classificationLabelY, min(width / 4, 341), 28, 5);
-  leftClassificationLabel = new ClassificationLabel(classificationLabelXLeft, classificationLabelY, classificationLabelWidth, classificationLabelHeight, classificationLabelRadius, true);
-  rightClassificationLabel = new ClassificationLabel(classificationLabelXRight, classificationLabelY, classificationLabelWidth, classificationLabelHeight, classificationLabelRadius, false);
+  leftClassificationLabel = new ClassificationLabel(classificationLabelXLeft, classificationLabelY, classificationLabelWidth, classificationLabelHeight, classificationLabelRadius, LEFT);
+  rightClassificationLabel = new ClassificationLabel(classificationLabelXRight, classificationLabelY, classificationLabelWidth, classificationLabelHeight, classificationLabelRadius, RIGHT);
 
   if (isModelLoaded) {
     makeClassificationLabelsVisible();
@@ -374,14 +373,14 @@ function draw() {
       videoSize + 6
     );
 
-    leftPhotoGrid.render();
-    rightPhotoGrid.render();
+    leftPhotoGrid.draw();
+    rightPhotoGrid.draw();
     rectMode(CORNER);
     loadModel.draw();
 
-    classificationBar.render();
-    leftClassificationLabel.render();
-    rightClassificationLabel.render();
+    classificationBar.draw();
+    leftClassificationLabel.draw();
+    rightClassificationLabel.draw();
 
   } else {
     noStroke();

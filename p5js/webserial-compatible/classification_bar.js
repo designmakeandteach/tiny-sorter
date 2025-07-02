@@ -1,8 +1,11 @@
 
 /**
  * A p5 element that renders a bar that indicates the classification confidence.
- * 
- * @param {boolean} isLeft - Whether the classification bar is on the left or right side of the screen.
+ * @param {number} x - The x position of the classification bar.
+ * @param {number} y - The y position of the classification bar.
+ * @param {number} width - The width of the classification bar.
+ * @param {number} height - The height of the classification bar.
+ * @param {number} radius - The radius of the classification bar corners.
  */
 class ClassificationBar {
     constructor(x, y, width, height, radius) {
@@ -15,7 +18,6 @@ class ClassificationBar {
       this.confidenceLeftWidth = 0.0;
       this.confidenceRightWidth = 0.0;
       this.classificationMaxWidth = this.width / 2;
-      this.hasSetTimeout = false;
     }
 
     /**
@@ -23,6 +25,9 @@ class ClassificationBar {
      * @param {number} confidenceValue pass a value between 0 and 1.0
      */
     setConfidenceLeft(confidenceValue) {
+        if (confidenceValue < 0 || confidenceValue > 1.0) {
+            throw new Error("Confidence value must be between 0 and 1.0");
+        }
         this.confidenceLeftWidth = confidenceValue * this.classificationMaxWidth;
     }
 
@@ -31,11 +36,14 @@ class ClassificationBar {
      * @param {number} confidenceValue pass a value between 0 and 1.0
      */
     setConfidenceRight(confidenceValue) {   
+        if (confidenceValue < 0 || confidenceValue > 1.0) {
+            throw new Error("Confidence value must be between 0 and 1.0");
+        }
         this.confidenceRightWidth = confidenceValue * this.classificationMaxWidth;
     }
 
-    render() {
-      //Draw Background rectangle
+    draw() {
+      // Draw Background rectangle
       rectMode(CENTER);
       fill("rgba(174, 203, 250, 0.4)");
       stroke(255);
@@ -52,6 +60,7 @@ class ClassificationBar {
       );
       noStroke();
   
+      // Draw the right side of the classification bar
       fill("#1967d2");
       rect(
         this.x + this.confidenceLeftWidth / 2,
@@ -63,6 +72,7 @@ class ClassificationBar {
         this.radius,
         this.radius
       );
+      // Draw the left side of the classification bar
       rect(
         this.x - this.confidenceRightWidth / 2,
         this.y,
@@ -73,6 +83,8 @@ class ClassificationBar {
         this.radius,
         this.radius
       );
+      
+      // Draw the line in the middle of the classification bar
       stroke(0);
       strokeWeight(7);
       strokeCap(ROUND);
