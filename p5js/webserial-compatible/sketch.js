@@ -9,15 +9,15 @@ let classifier;
 let serialPort;
 
 // UI Elements
-let modeInput;
+let modelInput;
 let loadModel;
 let cameraBorder;
 let putSorter;
 let connectButton;
 let classificationBar;
-let leftGrid;
+let leftPhotoGrid;
 let video;
-let rightGrid;
+let rightPhotoGrid;
 let leftClassificationLabel;
 let rightClassificationLabel;
 let editCode;
@@ -55,6 +55,11 @@ function setConnectButtonText(text) {
  * @returns {Clickable}
  */
 function setupConnectButton() {
+  if (connectButton) {
+    connectButton.remove();
+    connectButton = null;
+  }
+
   connectButton = createButton(connectLabel);
   connectButton.position(width - 200, 20);
   connectButton.id("connectButton");
@@ -83,57 +88,14 @@ function setupConnectButton() {
   }
 }
 
-/**
- * Adds some extra controls to the UI to test the interface.
- * Add the query string "?test=true" to the URL to enable test mode.
- */
-function setupTestMode() {
-  const params = new URLSearchParams(window.location.search);
-  const test = params.get("test");
 
-
-  // Add extra UI tif we are testing
-  if (test) {
-    // Add classification label test buttons
-    addLeftClassificationLabelButton = createButton("Add Left Class");
-    addLeftClassificationLabelButton.position(0, height / 3.3);
-    addLeftClassificationLabelButton.mousePressed(() => {
-      leftClassificationLabel.value("Left Class");
-      leftClassificationLabel.visible(true);
-      leftClassificationLabel.triggerSplash();
-    });
-    addRightClassificationLabelButton = createButton("Add Right Class");
-    addRightClassificationLabelButton.position(width - 100, height / 3.3);
-    addRightClassificationLabelButton.style("width", "100px");
-    addRightClassificationLabelButton.mousePressed(() => {
-      rightClassificationLabel.value("Right Class");
-      rightClassificationLabel.visible(true);
-      rightClassificationLabel.triggerSplash();
-    });
-
-    // Add photo grid test buttons
-    addLeftPhotoButton = createButton("Add Left");
-    addLeftPhotoButton.position(0, height / 2);
-    addLeftPhotoButton.mousePressed(() => {
-      let pic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
-      leftGrid.addImage(pic);
-    });
-    addRightPhotoButton = createButton("Add Right");
-    addRightPhotoButton.style("width", "100px");
-    addRightPhotoButton.position(width - 100, height / 2);
-    addRightPhotoButton.mousePressed(() => {
-      let pic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
-      rightGrid.addImage(pic);
-    });
-
-    // seed the model URL
-    enteredText = "https://teachablemachine.withgoogle.com/models/eGyhdtfG9/";
-    modelInput.value(enteredText);
-
-  }
-} // end setupTestMode()
-
+// Called for first time setup only.
 function setupLoadModelButton() {
+  if (loadModel) {
+    loadModel.remove();
+    loadModel = null;
+  }
+
   loadModel = new Clickable();
 
   loadModel.resize(145, 40);
@@ -189,6 +151,7 @@ function makeClassificationLabelsVisible() {
   rightClassificationLabel.visible(true);
 }
 
+// Called for first time setup and when the screen is resized
 function setupClassificationBarAndLabels() {
 
   const classificationLabelY = height / 3.3;
@@ -207,10 +170,30 @@ function setupClassificationBarAndLabels() {
   }
 } // end setupClassificationBarAndLabels()
 
+// Called for first time setup and when the screen is resized
 function setupPhotoGrids() {
+  let leftPhotos = null;
+  let rightPhotos = null;
+
+  // If we are resizing the screen, save the photos
+  if (leftPhotoGrid) {
+    leftPhotos = leftPhotoGrid.images;
+  }
+  if (rightPhotoGrid) {
+    rightPhotos = rightPhotoGrid.images;
+  }
+
   let photoGridY = height / 2.5;
-  leftGrid = new PhotoGrid(width / 2 - 480, photoGridY, 3, 2, 120, 20);
-  rightGrid = new PhotoGrid(width / 2 + 300, photoGridY, 3, 2, 120, 20);
+  leftPhotoGrid = new PhotoGrid(width / 2 - 480, photoGridY, 3, 2, 120, 20);
+  rightPhotoGrid = new PhotoGrid(width / 2 + 300, photoGridY, 3, 2, 120, 20);
+
+  // Restore the photos if they were saved
+  if (leftPhotos) {
+    leftPhotoGrid.images = leftPhotos;
+  }
+  if (rightPhotos) {
+    rightPhotoGrid.images = rightPhotos;
+  }
 } // end setupPhotoGrids()
 
 function setupEditCodeLink() {
@@ -234,6 +217,11 @@ function setupEditCodeLink() {
 } // end setupEditCodeLink()
 
 function setupModelInput() {
+  if (modelInput) {
+    modelInput.remove();
+    modelInput = null;
+  }
+
   modelInput = createInput();
   modelInput.input(() => {
     enteredText = this.value().trim();
@@ -250,6 +238,58 @@ function setupModelInput() {
   modelInput.attribute("placeholder", "Paste model link here");
 } // end setupModelInput()
 
+
+/**
+ * Adds some extra controls to the UI to test the interface.
+ * Add the query string "?test=true" to the URL to enable test mode.
+ */
+function setupTestMode() {
+  const params = new URLSearchParams(window.location.search);
+  const test = params.get("test");
+
+
+  // Add extra UI tif we are testing
+  if (test) {
+    // Add classification label test buttons
+    addLeftClassificationLabelButton = createButton("Add Left Class");
+    addLeftClassificationLabelButton.position(0, height / 3.3);
+    addLeftClassificationLabelButton.mousePressed(() => {
+      leftClassificationLabel.value("Left Class");
+      leftClassificationLabel.visible(true);
+      leftClassificationLabel.triggerSplash();
+    });
+    addRightClassificationLabelButton = createButton("Add Right Class");
+    addRightClassificationLabelButton.position(width - 100, height / 3.3);
+    addRightClassificationLabelButton.style("width", "100px");
+    addRightClassificationLabelButton.mousePressed(() => {
+      rightClassificationLabel.value("Right Class");
+      rightClassificationLabel.visible(true);
+      rightClassificationLabel.triggerSplash();
+    });
+
+    // Add photo grid test buttons
+    addLeftPhotoButton = createButton("Add Left");
+    addLeftPhotoButton.position(0, height / 2);
+    addLeftPhotoButton.mousePressed(() => {
+      // TODO(zundel): Fix scaling.We are getting a cropped image, not a scaled image
+      let pic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
+      leftPhotoGrid.addImage(pic);
+    });
+    addRightPhotoButton = createButton("Add Right");
+    addRightPhotoButton.style("width", "100px");
+    addRightPhotoButton.position(width - 100, height / 2);
+    addRightPhotoButton.mousePressed(() => {
+      let pic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
+      // TODO(zundel): Fix scaling.We are getting a cropped image, not a scaled image
+      rightPhotoGrid.addImage(pic);
+    });
+
+    // seed the model URL
+    enteredText = "https://teachablemachine.withgoogle.com/models/eGyhdtfG9/";
+    modelInput.value(enteredText);
+
+  }
+} // end setupTestMode()
 
 function setup() {
   createCanvas(window.innerWidth, window.innerHeight);
@@ -293,9 +333,9 @@ function draw() {
       video.pause();
       let selectPic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
       if (isLeftPic) {
-        leftGrid.addImage(selectPic);
+        leftPhotoGrid.addImage(selectPic);
       } else {
-        rightGrid.addImage(selectPic);
+        rightPhotoGrid.addImage(selectPic);
       }
       setTimeout(() => {
         video.play();
@@ -334,8 +374,8 @@ function draw() {
       videoSize + 6
     );
 
-    leftGrid.render();
-    rightGrid.render();
+    leftPhotoGrid.render();
+    rightPhotoGrid.render();
     rectMode(CORNER);
     loadModel.draw();
 
@@ -353,8 +393,7 @@ function draw() {
 
 // Get a prediction for the current video frame
 function classifyVideo() {
-  classifier.classify(video, gotResult);
-  // classifier.classify(video, () => {});
+  classifier.classify(video, processClassificationResult);
 }
 
 function updateClassification(results) {
@@ -398,8 +437,7 @@ function updateClassification(results) {
   }
 }
 
-// When we get a result
-function gotResult(error, results) {
+function processClassificationResult(error, results) {
   // If there is an error
   if (error) {
     console.error(error);
@@ -422,16 +460,10 @@ function windowResized() {
   clear();
   background(bgColor);
 
-  const leftPhotos = leftGrid.images;
-  const rightPhotos = rightGrid.images;
-
-  setupPhotoGrids();
-
-  leftGrid.images = leftPhotos;
-  rightGrid.images = rightPhotos;
-
-  setupClassificationBarAndLabels();
+  // Components not justified left need to be moved around.
+  // It's simplest to just re-create them.
   setupConnectButton();
+  setupClassificationBarAndLabels();
+  setupPhotoGrids();
   setupEditCodeLink();
-
 }
