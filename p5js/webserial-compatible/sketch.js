@@ -1,5 +1,8 @@
 const connectLabel = "CONNECT MICROPROCESSOR"
 const disconnectLabel = "DISCONNECT MICROPROCESSOR"
+const videoSize = 250;
+const videoPauseDelay = 2000;
+const bgColor = "#e8f0fe";
 
 // Machine Learning Model Instance
 let classifier;
@@ -23,8 +26,6 @@ let editCodeLink;
 
 // Other State
 let isLeftPic;
-let videoSize;
-let bgColor = "#e8f0fe";
 let shouldFreezeFrame;
 let modelLabels = [];
 let hasSetPauseTimer;
@@ -152,10 +153,12 @@ function setupLoadModelButton() {
 }  // end setupLoadModelButton()
 
 function makeClassificationLabelsVisible() {
-  leftClassificationLabel.value(modelLabels[1]);
-  rightClassificationLabel.value(modelLabels[0]);
-  leftClassificationLabel.visible(true);
-  rightClassificationLabel.visible(true);
+  if (modelLabels.length > 1) {
+    leftClassificationLabel.value(modelLabels[1]);
+    rightClassificationLabel.value(modelLabels[0]);
+    leftClassificationLabel.visible(true);
+    rightClassificationLabel.visible(true);
+  }
 }
 
 // Called for first time setup and when the screen is resized
@@ -276,21 +279,17 @@ function setupTestMode() {
     addLeftPhotoButton = createButton("Add Left");
     addLeftPhotoButton.position(0, height / 2);
     addLeftPhotoButton.mousePressed(() => {
-      // TODO(zundel): Fix scaling.We are getting a cropped image, not a scaled image
-      let pic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
-      leftPhotoGrid.addImage(pic);
+      leftPhotoGrid.addImage(getCroppedVideoImage());
     });
     addRightPhotoButton = createButton("Add Right");
     addRightPhotoButton.style("width", "100px");
     addRightPhotoButton.position(width - 100, height / 2);
     addRightPhotoButton.mousePressed(() => {
-      let pic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
-      // TODO(zundel): Fix scaling.We are getting a cropped image, not a scaled image
-      rightPhotoGrid.addImage(pic);
+      rightPhotoGrid.addImage(getCroppedVideoImage());
     });
 
     // seed the model URL
-    modelInput.value( "https://teachablemachine.withgoogle.com/models/eGyhdtfG9/");
+    modelInput.value("https://teachablemachine.withgoogle.com/models/eGyhdtfG9/");
 
   }
 } // end setupTestMode()
@@ -298,7 +297,6 @@ function setupTestMode() {
 function setup() {
   createCanvas(window.innerWidth, window.innerHeight);
   // Create the video
-  videoSize = 250;
   video = createCapture(VIDEO);
   video.hide();
   shouldFeezeFrame = false;
@@ -330,12 +328,10 @@ function draw() {
   //   Darker BG
   if (width > 700) {
     background(bgColor);
-    video.get();
-    //   Darker BG
-    // background('#e8f0fe');
+
     if (shouldFreezeFrame && !hasSetPauseTimer) {
       video.pause();
-      let selectPic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
+      let selectPic = getCroppedVideoImage();
       if (isLeftPic) {
         leftPhotoGrid.addImage(selectPic);
       } else {
@@ -345,7 +341,7 @@ function draw() {
         video.play();
         hasSetPauseTimer = false;
         shouldFreezeFrame = false;
-      }, 2000);
+      }, videoPauseDelay);
     }
     image(
       putsorter,
@@ -393,6 +389,10 @@ function draw() {
     text("expand page or ", width / 2, height / 1.6);
     text("load on a computer to use", width / 2, height / 1.5);
   }
+}
+
+function getCroppedVideoImage() {
+  return video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
 }
 
 // Get a prediction for the current video frame
