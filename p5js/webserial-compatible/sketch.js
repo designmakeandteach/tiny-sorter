@@ -5,7 +5,7 @@
  * Derived from Google Experiment Tiny Sorter project.
  * https://experiments.withgoogle.com/tiny-sorter
  * 
- * Modifications Coyright 2025 Eric Z. Ayers
+ * Modifications Copyright 2025 Eric Z. Ayers
  * Distributed under the MIT License.
  */
 const connectLabel = "CONNECT MICROPROCESSOR"
@@ -71,11 +71,21 @@ function initSerialPort() {
 /* Video and Model Functions                                                          */
 /*----------------------------------------------------------------------------------- */
 
+/**
+ * Get the current video frame for classification.
+ * 
+ * @returns {p5.Image} The current video frame image.
+ */
 function getVideoImage() {
+  // See comments in classifyVideo() about returning a cropped image.
   //return video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
   return video.get();
 }
 
+/**
+ * Pause the video for a short duration to capture a still frame.
+ * The video will automatically resume after the pause delay.
+ */
 function pauseVideo() {
   if (!hasSetVideoPauseTimer) {
     hasSetVideoPauseTimer = true;
@@ -87,8 +97,12 @@ function pauseVideo() {
   }
 }
 
-// The results are in an array ordered by confidence.
-// console.log(results[0]);
+/**
+ * Update the classification display and trigger actions based on classification results.
+ * The results are in an array ordered by confidence.
+ * 
+ * @param {Array} results - Array of classification results with label and confidence properties.
+ */
 function updateClassification(results) {
   // console.log(results);
   const class1 = results.filter((objs) => {
@@ -133,6 +147,12 @@ function updateClassification(results) {
   }
 }
 
+/**
+ * Process the results from the machine learning classifier.
+ * 
+ * @param {Error|null} error - Error object if classification failed, null otherwise.
+ * @param {Array} results - Array of classification results with label and confidence properties.
+ */
 function processClassificationResult(error, results) {
   // If there is an error
   if (error) {
@@ -144,10 +164,12 @@ function processClassificationResult(error, results) {
   lastClassifiedImage = null;
 }
 
-// Get a prediction for the current video frame.
-//
-// TODO(zundel): The original code sent a cropped image to the classifier.
-// That saves on the image size, but to my knowledge, the model was trained on the full image.
+/**
+ * Get a prediction for the current video frame.
+ * 
+ * TODO(zundel): The original code sent a cropped image to the classifier.
+ * That saves on the image size, but to my knowledge, the model was trained on the full image.
+ */
 function classifyVideo() {
   if (isModelLoaded && lastClassifiedImage === null && !hasSetVideoPauseTimer) {
     lastClassifiedImage = getVideoImage();
@@ -159,6 +181,11 @@ function classifyVideo() {
 /* UI Setup Functions                                                                 */
 /*----------------------------------------------------------------------------------- */
 
+/**
+ * Set the text of the connect button in the DOM.
+ * 
+ * @param {string} text - The text to display on the connect button.
+ */
 function setConnectButtonText(text) {
   const connectButton = document.querySelector("#connect");
   if (connectButton) {
@@ -214,8 +241,9 @@ function ensureTrailingSlash(url) {
   return url.charAt(url.length - 1) === '/' ? url : url + '/';
 }
 
-
-// Create the load model button. Called for first time setup only.
+/**
+ * Create the load model button. Called for first time setup only.
+ */
 function setupLoadModelButton() {
   if (loadModelButton) {
     loadModelButton.remove();
@@ -268,6 +296,9 @@ function setupLoadModelButton() {
   };
 }  // end setupLoadModelButton()
 
+/**
+ * Make the classification labels visible and set their values from the model labels.
+ */
 function makeClassificationLabelsVisible() {
   if (modelLabels.length > 1) {
     leftClassificationLabel.value(modelLabels[1]);
@@ -277,9 +308,10 @@ function makeClassificationLabelsVisible() {
   }
 }
 
-// Called for first time setup and when the screen is resized
+/**
+ * Called for first time setup and when the screen is resized.
+ */
 function setupClassificationBarAndLabels() {
-
   const classificationLabelY = height / 3.3;
   const classificationLabelXLeft = width / 2 - 314;
   const classificationLabelXRight = width / 2 + 314;
@@ -296,7 +328,9 @@ function setupClassificationBarAndLabels() {
   }
 } // end setupClassificationBarAndLabels()
 
-// Called for first time setup and when the screen is resized
+/**
+ * Called for first time setup and when the screen is resized.
+ */
 function setupPhotoGrids() {
   let leftPhotos = null;
   let rightPhotos = null;
@@ -322,6 +356,9 @@ function setupPhotoGrids() {
   }
 } // end setupPhotoGrids()
 
+/**
+ * Setup the edit code link at the bottom of the screen.
+ */
 function setupEditCodeLink() {
   if (editCodeLink) {
     editCodeLink.remove();
@@ -342,6 +379,9 @@ function setupEditCodeLink() {
   editCodeLink.style("color", "#1967D2");
 } // end setupEditCodeLink()
 
+/**
+ * Setup the model input field at the top left of the screen.
+ */
 function setupModelInput() {
   if (modelInput) {
     modelInput.remove();

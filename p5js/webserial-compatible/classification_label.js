@@ -2,7 +2,7 @@
  * Derived from Google Experiment Tiny Sorter project.
  * https://experiments.withgoogle.com/tiny-sorter
  * 
- * Modifications Coyright 2025 Eric Z. Ayers
+ * Modifications Copyright 2025 Eric Z. Ayers
  * Distributed under the MIT License.
  */
 
