@@ -1,56 +1,4 @@
-class PhotoGrid {
-  constructor(isLeft) {
-    this.images = [];
-    console.log(this.images.length);
-    if (isLeft) {
-      this.x = width / 2 - 480;
-    } else {
-      this.x = width / 2 + 300;
-    }
 
-    this.y = height / 2.5;
-    this.numRows = 3;
-    this.numCols = 2;
-    this.imageSize = 120;
-    this.padding = 20;
-  }
-
-  addImage(img) {
-    this.images.push(img);
-    if (this.images.length > 9) {
-      this.images.shift();
-    }
-  }
-
-  render() {
-    for (let i = 0; i < this.images.length; i++) {
-      let currImage = this.images[i];
-      let row = i % 3;
-      let col = int(i / 3);
-      fill(255);
-      noStroke();
-      rectMode(CORNER);
-      rect(
-        this.x + (this.imageSize + this.padding) * col,
-        this.y + (this.imageSize + this.padding) * row,
-        this.imageSize,
-        this.imageSize,
-        3,
-        3,
-        3,
-        3
-      );
-
-      image(
-        currImage,
-        this.x + (this.imageSize + this.padding) * col + 5,
-        this.y + (this.imageSize + this.padding) * row + 5,
-        this.imageSize - 10,
-        this.imageSize - 10
-      );
-    }
-  }
-}
 
 function debounce(func, wait, immediate) {
   var timeout;
@@ -248,7 +196,7 @@ class ClassificationBar {
 
 class ClassInput {
   constructor(isLeft) {
-    this.width = 243;
+    this.width = 200;
     this.height = 53;
     this.radius = 9;
     this.textLineOffset = 40;
@@ -283,6 +231,7 @@ class ClassInput {
   onHover(x, y) {
     this.detectZone(x, y);
   }
+
   detectZone(x, y) {
     const leftBound = this.x - this.width / 2;
     const rightBound = this.x + this.width / 2;
@@ -322,53 +271,14 @@ class ClassInput {
         this.radius
       );
 
-      // } else {
-      //   rect(this.x, this.y + this.textLineOffset, this.width, this.height + this.textLineOffset * 2, this.radius, this.radius, this.radius, this.radius);
-      //   if (this.hoverOne) {
-      //     fill('rgba(154,160,166, 0.2)');
-      //     rect(this.x, this.y, this.width, this.height, this.radius, this.radius, 0, 0);
-      //   } else if (this.hoverTwo) {
-      //     fill('rgba(154, 160, 166, 0.2)');
-      //     rect(this.x, this.y + this.textLineOffset, this.width, this.height - 10, 0, 0, 0, 0);
-      //   } else if (this.hoverThree) {
-      //     fill('rgba(154, 160, 166, 0.2)');
-      //     rect(this.x, this.y + this.textLineOffset * 2 + 6, this.width, this.height - 11, 0, 0, this.radius, this.radius);
-      //   }
-      // }
       if (labels.length >= 2) {
         fill("#1967D2");
         if (this.isLeft) {
           textAlign(LEFT, CENTER);
           text(labels[0], this.x - this.width / 2 + 10, this.y - 4);
-          //           if (this.isActive) {
-          //             text(labels[1], this.x - this.width / 2 + 10, this.y + this.textLineOffset);
-          //             text(labels[2], this.x - this.width / 2 + 10, this.y + this.textLineOffset * 2);
-
-          //           }
-          image(
-            pencil,
-            this.x - this.width / 2 + 200,
-            this.y - this.height / 2 + 10,
-            pencil.width / 2,
-            pencil.height / 2
-          );
         } else {
           textAlign(RIGHT, CENTER);
-          // if (labels.length > 2) {
           text(labels[1], this.x + this.width / 2 - 13, this.y - 4);
-          // }
-
-          //           if (this.isActive) {
-          //             text(labels[1], this.x + this.width / 2 - 13, this.y + this.textLineOffset);
-          //             text(labels[2], this.x + this.width / 2 - 13, this.y + this.textLineOffset * 2);
-          //           }
-          image(
-            pencil,
-            this.x + this.width / 2 - 235,
-            this.y - this.height / 2 + 10,
-            pencil.width / 2,
-            pencil.height / 2
-          );
         }
       }
     }
@@ -406,7 +316,6 @@ let selectPic;
 
 let editCode;
 let connect;
-let pencil;
 
 let bgColor = "#e8f0fe";
 let port;
@@ -541,7 +450,6 @@ function setup() {
   };
 
   leftGrid = new PhotoGrid(true);
-  pencil = loadImage("pencil_icon.png");
   classificationIndicator = new ClassificationBar();
   leftClassSelector = new ClassInput(true);
   rightClassSelector = new ClassInput(false);
