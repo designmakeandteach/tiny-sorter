@@ -390,10 +390,11 @@ function setupEditCodeLink() {
   );
   editCodeLink.position(width - 110, height - 40);
   editCodeLink.id("editCodeLink");
+  editCodeLink.class("link"); // see style.css for styling
 } // end setupEditCodeLink()
 
 /**
- * Setup the edit code link at the bottom of the screen.
+ * Setup a link back to the website at the bottom of the screen.
  */
 function setupLearnMoreLink() {
   if (learnMoreLink) {
@@ -408,6 +409,8 @@ function setupLearnMoreLink() {
   );
   learnMoreLink.position(0, height - 40);
   learnMoreLink.id("learnMoreLink");
+  editCodeLink.class("link"); // see style.css for styling
+
 }
 /**
  * Setup the model input field at the top left of the screen.
