@@ -52,19 +52,6 @@ class PhotoGrid {
   }
 }
 
-class DropDown {
-  constructor(isLeft, classList) {
-    this.isClicked = false;
-    this.width = this.height = 3;
-    this.x = 0;
-    this.y = 0;
-
-    this.class = null;
-  }
-
-  render() {}
-}
-
 function debounce(func, wait, immediate) {
   var timeout;
   return function () {
@@ -419,11 +406,8 @@ let selectPic;
 
 let editCode;
 let connect;
-let group;
 let pencil;
-// Darker BG
-// let bgColor = '#b8d1fc';
-// Lighter Bg
+
 let bgColor = "#e8f0fe";
 let port;
 let shouldFreezeFrame;
@@ -512,7 +496,6 @@ function setup() {
 
   cameraBorder = loadImage("camera_border.png");
   putsorter = loadImage("put_sorter.png");
-  group = loadImage("Group 61.png");
 
   loadModel = new Clickable();
 
@@ -572,7 +555,6 @@ function setup() {
   shouldFeezeFrame = false;
   hasSetPauseTimer = false;
 
- 
 
   modelInput = createInput();
   modelInput.input(myInputEvent);
@@ -681,14 +663,6 @@ function draw() {
       videoSize + 6
     );
 
-    // // image(connect, width - connect.width - 20, 20);
-    // image(group, 20, 20);
-
-    // rectMode(CENTER);
-    // noFill();
-    // stroke(255);
-    // strokeWeight(6);
-    // rect(width / 2, height / 2, videoSize, videoSize);
     leftGrid.render();
     rightGrid.render();
     rectMode(CORNER);
