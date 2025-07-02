@@ -7,6 +7,7 @@
  * @param {number} numRows - The number of rows in the grid.
  * @param {number} numCols - The number of columns in the grid.
  * @param {number} imageSize - The size of the images in the grid.
+ * @param {number} padding - The padding between the images in the grid.
  */
 class PhotoGrid {
   constructor(x, y, numRows, numCols, imageSize, padding) {
