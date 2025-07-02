@@ -1,10 +1,13 @@
 /**
  * A p5 element that renders around the classification label when a classification is detected.
- * 
- * @param {boolean} isLeft - Whether the splash screen is on the left or right side of the screen.
+ * @param {number} x 
+ * @param {number} y 
+ * @param {number} width 
+ * @param {number} height 
+ * @param {number} radius - Radius of the corners of the rectangle & explosion animation..
  */
 class Splash {
-  constructor(x, y, width, height) {
+  constructor(x, y, width, height, radius) {
 
     this.x = x;
     this.y = y;
@@ -18,9 +21,12 @@ class Splash {
     this.explosionRadius = 100;
     this.explosionIndex = 0;
     this.maxExplosions = 4;
-    this.radiusOffset = 10;
+    this.radius = radius;
   }
 
+  /**
+   * Trigger the animation sequence.
+   */
   trigger() {
     if (!this.isExploding) {
       this.explosionIndex = 0;
@@ -28,7 +34,7 @@ class Splash {
     }
   }
 
-  render() {
+  draw() {
     if (!this.isExploding) {
       fill(this.color);
       return;
@@ -38,24 +44,17 @@ class Splash {
     noFill();
     strokeWeight(3);
     stroke(this.color);
-    let size_offset = this.radiusOffset * this.explosionIndex;
-    let pos_offset = size_offset / 2;
-
+    let size_offset = this.radius * this.explosionIndex;
+    rectMode(CENTER)
     rect(
       this.x,
       this.y,
       this.width + size_offset,
       this.height + size_offset,
-      this.radiusOffset,
-      this.radiusOffset,
-      this.radiusOffset,
-      this.radiusOffset
-    );
+      this.radius);
 
     // Animate the explosion
     if (!this.isInbetweenUpdates) {
-      // TODO(zundel): It’s safer to use frameCount or deltaTime for animation progress in p5.js, which is more deterministic and integrates with p5’s draw loop.
-      // TODO(zundel): setTimeout is not cleared or tracked. If the Splash is triggered repeatedly, timeouts could pile up. If you ever remove/destroy the component, this could cause memory leaks.
       setTimeout(() => {
         this.explosionIndex++;
         this.isInbetweenUpdates = false;
@@ -71,18 +70,27 @@ class Splash {
 
 /**
  * A p5 element that renders the classification label.
+ * @param {number} x 
+ * @param {number} y 
+ * @param {number} width 
+ * @param {number} height 
+ * @param {number} radius - Radius of the corners of the rectangle.
+ * @param {string} orientation - LEFT or RIGHT
  */
 class ClassificationLabel {
-  constructor(x, y, width, height, radius, isLeft) {
+  constructor(x, y, width, height, radius, orientation) {
+    if (orientation !== LEFT && orientation !== RIGHT) {
+      throw new Error("Orientation must be LEFT or RIGHT");
+    }
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
     this.radius = radius;
-    this.isLeft = isLeft;
+    this.orientation = orientation;
     this.text_value = "";
     this.is_visible = false;
-    this.splash = new Splash(x, y, width, height);
+    this.splash = new Splash(x, y, width, height, radius);
   }
 
   /**
@@ -108,34 +116,35 @@ class ClassificationLabel {
   /**
    * Render the classification label.
    */
-  render() {
-    this.splash.render();
+  draw() {
 
-    if (this.is_visible) {
-      fill(255);
-      rectMode(CENTER);
-      noStroke();
-      rect(
-        this.x,
-        this.y,
-        this.width,
-        this.height,
-        this.radius,
-        this.radius,
-        this.radius,
-        this.radius
-      );
-
-      fill("#1967D2");
-      textSize(24);
-      textStyle(BOLD);
-      if (this.isLeft) {
-        textAlign(LEFT, CENTER);
-        text(this.text_value, this.x - this.width / 2 + 10, this.y);
-      } else {
-        textAlign(RIGHT, CENTER);
-        text(this.text_value, this.x + this.width / 2 - 13, this.y);
-      }
+    if (!this.is_visible) {
+      return;
     }
-  } // end render()
+    this.splash.draw();
+
+    // Draw the background rectangle
+    fill(255);
+    rectMode(CENTER);
+    noStroke();
+    rect(
+      this.x,
+      this.y,
+      this.width,
+      this.height,
+      this.radius);
+
+    // Draw the text
+    fill("#1967D2");
+    textSize(24);
+    textStyle(BOLD);
+
+    if (this.orientation === LEFT) {
+      textAlign(LEFT, CENTER);
+      text(this.text_value, this.x - this.width / 2 + 10, this.y);
+    } else {
+      textAlign(RIGHT, CENTER);
+      text(this.text_value, this.x + this.width / 2 - 13, this.y);
+    }
+  } // end draw()
 }
