@@ -1,5 +1,16 @@
+/**
+ * Webpage to control the Tiny Sorter project.
+ * See https://designmakeandteach.com/projecdts/tiny-sorter/ for how to use this in a classroom.
+ * 
+ * Derived from Google Experiment Tiny Sorter project.
+ * https://experiments.withgoogle.com/tiny-sorter
+ * 
+ * Modifications Copyright 2025 Eric Z. Ayers
+ * Distributed under the MIT License.
+ */
 const connectLabel = "CONNECT MICROPROCESSOR"
 const disconnectLabel = "DISCONNECT MICROPROCESSOR"
+const classifyDelay = 100;
 const videoSize = 250;
 const videoPauseDelay = 2000;
 const bgColor = "#e8f0fe";
@@ -25,15 +36,28 @@ let rightClassificationLabel;
 let editCodeLink;
 
 // Other State
-let isLeftPic;
-let shouldFreezeFrame;
-let modelLabels = [];
-let hasSetPauseTimer;
+let modelLabels = [];              // All Labels returned from the model.
+let hasSetVideoPauseTimer = false; // True if the video has been paused
+let lastClassifyTime = 0;          // Used to create a set interval between classification without using setTimeout()
 let isModelLoaded = false;
+let lastClassifiedImage = null; // serves as a sentinel to keep from running the lassifier to frequently and also stores the last image sent to the classifier
 
+
+
+/*----------------------------------------------------------------------------------- */
+/* Serail Port Initialization                                                         */
+/*----------------------------------------------------------------------------------- */
+
+/**
+ * Initialize the WebSerial object.
+ * 
+ * If the port is already open, it will be reused. Otherwise,
+ * The user must click on the connectButton to choose a port.
+ * 
+ * @returns {Serial} The serial port object.
+ */
 function initSerialPort() {
   let port = createSerial();
-
   let usedPorts = usedSerialPorts();
   if (usedPorts.length > 0) {
     port.open(usedPorts[0], 9600);
@@ -42,6 +66,126 @@ function initSerialPort() {
   return port;
 }
 
+
+/*----------------------------------------------------------------------------------- */
+/* Video and Model Functions                                                          */
+/*----------------------------------------------------------------------------------- */
+
+/**
+ * Get the current video frame for classification.
+ * 
+ * @returns {p5.Image} The current video frame image.
+ */
+function getVideoImage() {
+  // See comments in classifyVideo() about returning a cropped image.
+  //return video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
+  return video.get();
+}
+
+/**
+ * Pause the video for a short duration to capture a still frame.
+ * The video will automatically resume after the pause delay.
+ */
+function pauseVideo() {
+  if (!hasSetVideoPauseTimer) {
+    hasSetVideoPauseTimer = true;
+    video.pause();
+    setTimeout(() => {
+      video.play();
+      hasSetVideoPauseTimer = false;
+    }, videoPauseDelay);
+  }
+}
+
+/**
+ * Update the classification display and trigger actions based on classification results.
+ * The results are in an array ordered by confidence.
+ * 
+ * @param {Array} results - Array of classification results with label and confidence properties.
+ */
+function updateClassification(results) {
+  // console.log(results);
+  const class1 = results.filter((objs) => {
+    if (objs.label === modelLabels[0]) {
+      return objs;
+    }
+  });
+
+  const class2 = results.filter((objs) => {
+    if (objs.label === modelLabels[1]) {
+      return objs;
+    }
+  });
+
+  classificationBar.setConfidenceLeft(class1[0].confidence);
+  classificationBar.setConfidenceRight(class2[0].confidence);
+
+  if (class1[0].confidence > 0.9) {
+    try {
+      if (serialPort.opened()) {
+        console.log("Sending Class 2 Detected")
+        serialPort.write("2");
+      }
+      rightClassificationLabel.triggerSplash();
+      if (lastClassifiedImage) {
+        rightPhotoGrid.addImage(lastClassifiedImage);
+      }
+      pauseVideo();
+    } catch (e) { }
+  } else if (class2[0].confidence > 0.9) {
+    try {
+      if (serialPort.opened()) {
+        console.log("Sending Class 1 Detected")
+        serialPort.write("1");
+      }
+      leftClassificationLabel.triggerSplash();
+      if (lastClassifiedImage) {
+        leftPhotoGrid.addImage(lastClassifiedImage);
+      }
+      pauseVideo();
+    } catch (e) { }
+  }
+}
+
+/**
+ * Process the results from the machine learning classifier.
+ * 
+ * @param {Error|null} error - Error object if classification failed, null otherwise.
+ * @param {Array} results - Array of classification results with label and confidence properties.
+ */
+function processClassificationResult(error, results) {
+  // If there is an error
+  if (error) {
+    console.error(`Error classifying image: ${error}`);
+  } else {
+    updateClassification(results);
+  }
+  // Reset the last classified image so we can classify again
+  lastClassifiedImage = null;
+}
+
+/**
+ * Get a prediction for the current video frame.
+ * 
+ * TODO(zundel): The original code sent a cropped image to the classifier.
+ * That saves on the image size, but to my knowledge, the model was trained on the full image.
+ */
+function classifyVideo() {
+  if (isModelLoaded && lastClassifiedImage === null && !hasSetVideoPauseTimer) {
+    lastClassifiedImage = getVideoImage();
+    classifier.classify(lastClassifiedImage, processClassificationResult);
+  }
+}
+
+/*----------------------------------------------------------------------------------- */
+/* UI Setup Functions                                                                 */
+/*----------------------------------------------------------------------------------- */
+
+/**
+ * Set the text of the connect button in the DOM.
+ * 
+ * @param {string} text - The text to display on the connect button.
+ */
 function setConnectButtonText(text) {
   const connectButton = document.querySelector("#connect");
   if (connectButton) {
@@ -97,8 +241,9 @@ function ensureTrailingSlash(url) {
   return url.charAt(url.length - 1) === '/' ? url : url + '/';
 }
 
-
-// Create the load model button. Called for first time setup only.
+/**
+ * Create the load model button. Called for first time setup only.
+ */
 function setupLoadModelButton() {
   if (loadModelButton) {
     loadModelButton.remove();
@@ -132,7 +277,6 @@ function setupLoadModelButton() {
           } else {
             modelLabels = response.labels;
             isModelLoaded = true;
-            classifyVideo();
             makeClassificationLabelsVisible();
 
           }
@@ -152,6 +296,9 @@ function setupLoadModelButton() {
   };
 }  // end setupLoadModelButton()
 
+/**
+ * Make the classification labels visible and set their values from the model labels.
+ */
 function makeClassificationLabelsVisible() {
   if (modelLabels.length > 1) {
     leftClassificationLabel.value(modelLabels[1]);
@@ -161,9 +308,10 @@ function makeClassificationLabelsVisible() {
   }
 }
 
-// Called for first time setup and when the screen is resized
+/**
+ * Called for first time setup and when the screen is resized.
+ */
 function setupClassificationBarAndLabels() {
-
   const classificationLabelY = height / 3.3;
   const classificationLabelXLeft = width / 2 - 314;
   const classificationLabelXRight = width / 2 + 314;
@@ -180,7 +328,9 @@ function setupClassificationBarAndLabels() {
   }
 } // end setupClassificationBarAndLabels()
 
-// Called for first time setup and when the screen is resized
+/**
+ * Called for first time setup and when the screen is resized.
+ */
 function setupPhotoGrids() {
   let leftPhotos = null;
   let rightPhotos = null;
@@ -195,7 +345,7 @@ function setupPhotoGrids() {
 
   let photoGridY = height / 2.5;
   leftPhotoGrid = new PhotoGrid(width / 2 - 480, photoGridY, 3, 2, 120, 20);
-  rightPhotoGrid = new PhotoGrid(width / 2 + 300, photoGridY, 3, 2, 120, 20);
+  rightPhotoGrid = new PhotoGrid(width / 2 + 260, photoGridY, 3, 2, 120, 20);
 
   // Restore the photos if they were saved
   if (leftPhotos) {
@@ -206,6 +356,9 @@ function setupPhotoGrids() {
   }
 } // end setupPhotoGrids()
 
+/**
+ * Setup the edit code link at the bottom of the screen.
+ */
 function setupEditCodeLink() {
   if (editCodeLink) {
     editCodeLink.remove();
@@ -226,6 +379,9 @@ function setupEditCodeLink() {
   editCodeLink.style("color", "#1967D2");
 } // end setupEditCodeLink()
 
+/**
+ * Setup the model input field at the top left of the screen.
+ */
 function setupModelInput() {
   if (modelInput) {
     modelInput.remove();
@@ -279,28 +435,36 @@ function setupTestMode() {
     addLeftPhotoButton = createButton("Add Left");
     addLeftPhotoButton.position(0, height / 2);
     addLeftPhotoButton.mousePressed(() => {
-      leftPhotoGrid.addImage(getCroppedVideoImage());
+      leftPhotoGrid.addImage(getVideoImage());
     });
     addRightPhotoButton = createButton("Add Right");
     addRightPhotoButton.style("width", "100px");
     addRightPhotoButton.position(width - 100, height / 2);
     addRightPhotoButton.mousePressed(() => {
-      rightPhotoGrid.addImage(getCroppedVideoImage());
+      rightPhotoGrid.addImage(getVideoImage());
     });
 
     // seed the model URL
     modelInput.value("https://teachablemachine.withgoogle.com/models/eGyhdtfG9/");
-
   }
 } // end setupTestMode()
 
+
+
+/*----------------------------------------------------------------------------------- */
+/* UI functions called by P5                                                          */
+/*----------------------------------------------------------------------------------- */
+
+/**
+ * Called by p5 when the page is loaded. Initialize the UI here.
+ */
 function setup() {
   createCanvas(window.innerWidth, window.innerHeight);
   // Create the video
   video = createCapture(VIDEO);
   video.hide();
   shouldFeezeFrame = false;
-  hasSetPauseTimer = false;
+  hasSetVideoPauseTimer = false;
 
   cameraBorderImage = loadImage("camera_border.png");
   putsorter = loadImage("put_sorter.png");
@@ -316,33 +480,15 @@ function setup() {
 
   // Initialize the serial port
   serialPort = initSerialPort();
-
-  // Start classifying
-  if (isModelLoaded) {
-    classifyVideo();
-  }
-
 } // end setup()
 
+/**
+ * Called by p5 to redraw the Canvas.
+ */
 function draw() {
-  //   Darker BG
   if (width > 700) {
     background(bgColor);
 
-    if (shouldFreezeFrame && !hasSetPauseTimer) {
-      video.pause();
-      let selectPic = getCroppedVideoImage();
-      if (isLeftPic) {
-        leftPhotoGrid.addImage(selectPic);
-      } else {
-        rightPhotoGrid.addImage(selectPic);
-      }
-      setTimeout(() => {
-        video.play();
-        hasSetPauseTimer = false;
-        shouldFreezeFrame = false;
-      }, videoPauseDelay);
-    }
     image(
       putsorter,
       width / 2 - putsorter.width / 5,
@@ -384,81 +530,21 @@ function draw() {
     rightClassificationLabel.draw();
 
   } else {
+    // Tell the user to make the screen larger
     noStroke();
-
     text("expand page or ", width / 2, height / 1.6);
     text("load on a computer to use", width / 2, height / 1.5);
   }
-}
-
-function getCroppedVideoImage() {
-  return video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
-}
-
-// Get a prediction for the current video frame
-function classifyVideo() {
-  classifier.classify(video, processClassificationResult);
-}
-
-function updateClassification(results) {
-  // console.log(results);
-  const class1 = results.filter((objs) => {
-    if (objs.label === modelLabels[0]) {
-      return objs;
-    }
-  });
-
-  const class2 = results.filter((objs) => {
-    if (objs.label === modelLabels[1]) {
-      return objs;
-    }
-  });
-
-  classificationBar.setConfidenceLeft(class1[0].confidence);
-  classificationBar.setConfidenceRight(class2[0].confidence);
-
-  if (class1[0].confidence > 0.9) {
-    try {
-      if (serialPort.opened()) {
-        console.log("Sending Class 2 Detected")
-        serialPort.write("2");
-      }
-      shouldFreezeFrame = true;
-      rightClassificationLabel.triggerSplash();
-
-      isLeftPic = false;
-    } catch (e) { }
-  } else if (class2[0].confidence > 0.9) {
-    try {
-      if (serialPort.opened()) {
-        console.log("Sending Class 1 Detected")
-        serialPort.write("1");
-      }
-      shouldFreezeFrame = true;
-      leftClassificationLabel.triggerSplash();
-      isLeftPic = true;
-    } catch (e) { }
-  }
-}
-
-function processClassificationResult(error, results) {
-  // If there is an error
-  if (error) {
-    console.error(error);
-    return;
-  }
-  // The results are in an array ordered by confidence.
-  // console.log(results[0]);
-  updateClassification(results);
-
-  label = results[0].label;
-
-  // Classifiy again after a timeout
-  setTimeout(() => {
+  // Classify again after a timeout
+  if (Date.now() - lastClassifyTime > classifyDelay) {
     classifyVideo();
-  }, 250);
-}
+    lastClassifyTime = Date.now();
+  }
+} // end draw()
 
+/**
+ * Called by p5 when the window is resized.
+ */
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight, true);
   clear();

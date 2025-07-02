@@ -1,3 +1,11 @@
+/**
+ * Derived from Google Experiment Tiny Sorter project.
+ * https://experiments.withgoogle.com/tiny-sorter
+ * 
+ * Modifications Copyright 2025 Eric Z. Ayers
+ * Distributed under the MIT License.
+ */
+
 
 /**
  * A p5 element that renders a bar that indicates the classification confidence.
@@ -44,18 +52,15 @@ class ClassificationBar {
 
     draw() {
       // Draw Background rectangle
-      rectMode(CENTER);
       fill("rgba(174, 203, 250, 0.4)");
       stroke(255);
       strokeWeight(5);
+      rectMode(CENTER);
       rect(
         this.x,
         this.y,
         this.width,
         this.height,
-        this.radius,
-        this.radius,
-        this.radius,
         this.radius
       );
       noStroke();
@@ -67,10 +72,7 @@ class ClassificationBar {
         this.y,
         this.confidenceLeftWidth,
         this.height,
-        this.radius,
-        this.radius,
-        this.radius,
-        this.radius
+        this.radius    
       );
       // Draw the left side of the classification bar
       rect(
@@ -78,9 +80,6 @@ class ClassificationBar {
         this.y,
         this.confidenceRightWidth,
         this.height,
-        this.radius,
-        this.radius,
-        this.radius,
         this.radius
       );
       
