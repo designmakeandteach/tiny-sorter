@@ -136,7 +136,7 @@ class ClassificationBar {
         splashLeft.trigger();
 
         isLeftPic = false;
-      } catch (e) {}
+      } catch (e) { }
     } else if (class2[0].confidence > 0.9) {
       try {
         console.log("Sending Class 2 Detected")
@@ -144,7 +144,7 @@ class ClassificationBar {
         shouldFreezeFrame = true;
         splashRight.trigger();
         isLeftPic = true;
-      } catch (e) {}
+      } catch (e) { }
     }
   }
 
@@ -299,9 +299,7 @@ let videoSize;
 let classificationIndicator;
 
 let leftGrid;
-let leftAdd;
 let rightGrid;
-let rightAdd;
 
 let isLeftPic;
 
@@ -370,7 +368,7 @@ function connectClicked() {
     setConnectButtonText(connectLabel);
   }
 }
-  
+
 /**
  * Create the button at the top right of the screen that allows the user to connect to the serial port
  * @returns {Clickable}
@@ -399,22 +397,22 @@ function setupTestMode() {
   const test = params.get("test");
 
 
-    // Add extra UI tif we are testing
-    if (test) {
-      addLeftButton = createButton("Add Left");
-      addLeftButton.position(0, height / 2);
-      addLeftButton.mousePressed(() => {
-        let pic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
-        leftGrid.addImage(pic);
-      });
-      addRightButton = createButton("Add Right");
-      addRightButton.style("width", "100px");
-      addRightButton.position(width-100, height / 2);
-      addRightButton.mousePressed(() => {
-        let pic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
-        rightGrid.addImage(pic);
-      });   
-    }
+  // Add extra UI tif we are testing
+  if (test) {
+    addLeftButton = createButton("Add Left");
+    addLeftButton.position(0, height / 2);
+    addLeftButton.mousePressed(() => {
+      let pic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
+      leftGrid.addImage(pic);
+    });
+    addRightButton = createButton("Add Right");
+    addRightButton.style("width", "100px");
+    addRightButton.position(width - 100, height / 2);
+    addRightButton.mousePressed(() => {
+      let pic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
+      rightGrid.addImage(pic);
+    });
+  }
 }
 
 function setup() {
@@ -504,7 +502,7 @@ function setup() {
 
   connect = setupConnectButton();
   serialPort = initSerialPort();
-  
+
   editCode = createA(
     "https://editor.p5js.org/designmakeandteach/sketches/yiTc27eXT",
     "EDIT CODE",
