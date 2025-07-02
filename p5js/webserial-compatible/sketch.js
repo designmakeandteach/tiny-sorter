@@ -285,7 +285,6 @@ class ClassInput {
   }
 }
 
-const isTestMode = true;
 const connectLabel = "CONNECT MICROPROCESSOR"
 const disconnectLabel = "DISCONNECT MICROPROCESSOR"
 // Classifier Variable
@@ -313,7 +312,6 @@ let cameraBorder;
 let putSorter;
 let splashLeft;
 let splashRight;
-let selectPic;
 
 let editCode;
 let connect;
@@ -330,14 +328,11 @@ let isRightClassSelected = false;
 let poppinsRegular;
 let poppinsBold;
 let hasSetPauseTimer;
-// To store the classification
+
 let label = "";
 let isModelLoaded = false;
 let enteredText = "";
-// // Load the model first
-// function preload() {
-//   classifier = ml5.imageClassifier(imageModel + 'model.json');
-// }
+
 
 function myInputEvent() {
   enteredText = this.value().trim();
@@ -396,25 +391,31 @@ function setupConnectButton() {
   return connect;
 }
 
+/**
+ * Add the query string "?test=true" to the URL to enable test mode.
+ */
 function setupTestMode() {
+  const params = new URLSearchParams(window.location.search);
+  const test = params.get("test");
+
+
     // Add extra UI tif we are testing
-    if (isTestMode) {
-      addLeft = createButton("Add Left");
-      addLeft.position(0, height / 2);
-      addLeft.mousePressed(() => {
+    if (test) {
+      addLeftButton = createButton("Add Left");
+      addLeftButton.position(0, height / 2);
+      addLeftButton.mousePressed(() => {
         let pic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
         leftGrid.addImage(pic);
       });
-      addRight = createButton("Add Right");
-      addRight.style("width", "100px");
-      addRight.position(width-100, height / 2);
-      addRight.mousePressed(() => {
+      addRightButton = createButton("Add Right");
+      addRightButton.style("width", "100px");
+      addRightButton.position(width-100, height / 2);
+      addRightButton.mousePressed(() => {
         let pic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
         rightGrid.addImage(pic);
       });   
     }
 }
-
 
 function setup() {
   createCanvas(window.innerWidth, window.innerHeight);
@@ -469,13 +470,15 @@ function setup() {
     }
   };
 
-  leftGrid = new PhotoGrid(true);
+  let photoGridY = height / 2.5;
+  leftGrid = new PhotoGrid(width / 2 - 480, photoGridY, 3, 2, 120, 20);
+  rightGrid = new PhotoGrid(width / 2 + 300, photoGridY, 3, 2, 120, 20);
+
   classificationIndicator = new ClassificationBar();
   leftClassSelector = new ClassInput(true);
   rightClassSelector = new ClassInput(false);
   splashRight = new Splash(false);
   splashLeft = new Splash(true);
-  rightGrid = new PhotoGrid(false);
   poppinsRegular = loadFont("Poppins-Regular.ttf");
   poppinsBold = loadFont("Poppins-Bold.ttf");
 
@@ -486,8 +489,7 @@ function setup() {
 
   modelInput = createInput();
   modelInput.input(myInputEvent);
-  // modelInput.style('position', 'absolute');
-  // modelInput.style('z-index', 10);
+
   modelInput.position(20, 20);
   modelInput.style("height", "35px");
   modelInput.style("width", "267px");
@@ -503,21 +505,6 @@ function setup() {
   connect = setupConnectButton();
   serialPort = initSerialPort();
   
-  leftAdd = debounce(
-    () => {
-      leftGrid.addImage(selectPic);
-    },
-    500,
-    true
-  );
-  rightAdd = debounce(
-    () => {
-      rightGrid.addImage(selectPic);
-    },
-    500,
-    true
-  );
-
   editCode = createA(
     "https://editor.p5js.org/designmakeandteach/sketches/yiTc27eXT",
     "EDIT CODE",
@@ -549,11 +536,11 @@ function draw() {
     // background('#e8f0fe');
     if (shouldFreezeFrame && !hasSetPauseTimer) {
       video.pause();
-      selectPic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
+      let selectPic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
       if (isLeftPic) {
-        leftAdd();
+        leftGrid.addImage(selectPic);
       } else {
-        rightAdd();
+        rightGrid.addImage(selectPic);
       }
       setTimeout(() => {
         video.play();

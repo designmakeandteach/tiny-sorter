@@ -1,8 +1,7 @@
 /**
- * A grid of images that can be used to display a set of images.
+ * A p5 Element that renders grid of images that can be used to 
+ * display a set of images.
  * 
- * @param {boolean} isLeft - Whether the grid is on the left or right side of the screen.
- *  TODO: Add the following parameters:
  * @param {number} x - The x-coordinate of the grid.
  * @param {number} y - The y-coordinate of the grid.
  * @param {number} numRows - The number of rows in the grid.
@@ -10,29 +9,24 @@
  * @param {number} imageSize - The size of the images in the grid.
  */
 class PhotoGrid {
-  constructor(isLeft) {
+  constructor(x, y, numRows, numCols, imageSize, padding) {
     this.images = [];
-    console.log(this.images.length);
-    if (isLeft) {
-      this.x = width / 2 - 480;
-    } else {
-      this.x = width / 2 + 300;
-    }
-
-    this.y = height / 2.5;
-    this.numRows = 3;
-    this.numCols = 2;
-    this.imageSize = 120;
-    this.padding = 20;
+    this.x = x;
+    this.y = y;
+    this.numRows = numRows;
+    this.numCols = numCols;
+    this.imageSize = imageSize;
+    this.padding = padding;
     this.maxImages = this.numRows * this.numCols;
-  }
+  } // end constructor()
 
+  // Add an image to the grid. If the grid is full, the oldest image is removed.
   addImage(img) {
     this.images.push(img);
     if (this.images.length > this.maxImages) {
       this.images.shift();
     }
-  }
+  } // end addImage()
 
   render() {
     let imageIndex = 0;
@@ -42,8 +36,7 @@ class PhotoGrid {
           return;
         }
 
-        let currImage = this.images[imageIndex++];
-
+        // Draw a border around the image
         fill(255);
         noStroke();
         rectMode(CORNER);
@@ -58,8 +51,9 @@ class PhotoGrid {
           3
         );
 
+        // Render the image
         image(
-          currImage,
+          this.images[imageIndex++],
           this.x + (this.imageSize + this.padding) * col + 5,
           this.y + (this.imageSize + this.padding) * row + 5,
           this.imageSize - 10,
@@ -67,5 +61,5 @@ class PhotoGrid {
         );
       }
     }
-  }
+  } // end render()
 }
