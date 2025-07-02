@@ -4,66 +4,67 @@
  * @param {boolean} isLeft - Whether the splash screen is on the left or right side of the screen.
  */
 class Splash {
-  constructor(x, y, width, height, isLeft) {
+  constructor(x, y, width, height) {
 
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
-    this.isLeft = isLeft;
 
     this.color = color(22, 79, 200);
     this.isExploding = false;
+    // TODO(zundel): factor out this isInbetweenUpdates for some better animation logic
     this.isInbetweenUpdates = false;
     this.explosionRadius = 100;
     this.explosionIndex = 0;
-    this.numRadius = 4;
+    this.maxExplosions = 4;
     this.radiusOffset = 10;
   }
 
   trigger() {
-    this.isExploding = true;
-  }
-
-  updateIndex() {
-    this.explosionIndex++;
-    this.isInbetweenUpdates = false;
+    if (!this.isExploding) {
+      this.explosionIndex = 0;
+      this.isExploding = true;
+    }
   }
 
   render() {
     if (!this.isExploding) {
       fill(this.color);
-      // rect(this.x - (this.width - this.radiusOffset/2) / 2, this.y - (this.height - this.radiusOffset/2) / 2, this.width + this.radiusOffset, this.height + this.radiusOffset);
-    } else {
-      noFill();
-      strokeWeight(3);
-      stroke(this.color);
-      let size_offset = this.radiusOffset * this.explosionIndex;
-      let pos_offset = size_offset / 2;
-
-      rect(
-        this.x,
-        this.y,
-        this.width + size_offset,
-        this.height + size_offset,
-        this.radiusOffset,
-        this.radiusOffset,
-        this.radiusOffset,
-        this.radiusOffset
-      );
+      return;
     }
 
-    if (this.isExploding && !this.isInbetweenUpdates) {
+    // Render the explosion
+    noFill();
+    strokeWeight(3);
+    stroke(this.color);
+    let size_offset = this.radiusOffset * this.explosionIndex;
+    let pos_offset = size_offset / 2;
+
+    rect(
+      this.x,
+      this.y,
+      this.width + size_offset,
+      this.height + size_offset,
+      this.radiusOffset,
+      this.radiusOffset,
+      this.radiusOffset,
+      this.radiusOffset
+    );
+
+    // Animate the explosion
+    if (!this.isInbetweenUpdates) {
+      // TODO(zundel): It’s safer to use frameCount or deltaTime for animation progress in p5.js, which is more deterministic and integrates with p5’s draw loop.
+      // TODO(zundel): setTimeout is not cleared or tracked. If the Splash is triggered repeatedly, timeouts could pile up. If you ever remove/destroy the component, this could cause memory leaks.
       setTimeout(() => {
-        this.updateIndex();
+        this.explosionIndex++;
+        this.isInbetweenUpdates = false;
       }, 75);
       this.isInbetweenUpdates = true;
-    }
 
-    if (this.explosionIndex >= this.numRadius) {
-      this.isExploding = false;
-      this.isInbetweenUpdates = false;
-      this.explosionIndex = 0;
+      if (this.explosionIndex >= this.maxExplosions) {
+        this.isExploding = false;
+      }
     }
   }
 }
@@ -81,7 +82,7 @@ class ClassificationLabel {
     this.isLeft = isLeft;
     this.text_value = "";
     this.is_visible = false;
-    this.splash = new Splash(x, y, width, height, isLeft);
+    this.splash = new Splash(x, y, width, height);
   }
 
   /**
@@ -130,10 +131,10 @@ class ClassificationLabel {
       textStyle(BOLD);
       if (this.isLeft) {
         textAlign(LEFT, CENTER);
-        text(this.text_value, this.x - this.width / 2 + 10, this.y );
+        text(this.text_value, this.x - this.width / 2 + 10, this.y);
       } else {
         textAlign(RIGHT, CENTER);
-        text(this.text_value, this.x + this.width / 2 - 13, this.y );
+        text(this.text_value, this.x + this.width / 2 - 13, this.y);
       }
     }
   } // end render()
