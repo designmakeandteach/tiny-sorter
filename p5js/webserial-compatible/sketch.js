@@ -57,7 +57,7 @@ class ClassificationBar {
           serialPort.write("1");
         }
         shouldFreezeFrame = true;
-        splashLeft.trigger();
+        rightClassificationLabel.triggerSplash();
 
         isLeftPic = false;
       } catch (e) { }
@@ -68,7 +68,7 @@ class ClassificationBar {
           serialPort.write("2");
         }
         shouldFreezeFrame = true;
-        splashRight.trigger();
+        leftClassificationLabel.triggerSplash();
         isLeftPic = true;
       } catch (e) { }
     }
@@ -144,8 +144,6 @@ let rightClassificationLabel;
 
 let cameraBorder;
 let putSorter;
-let splashLeft;
-let splashRight;
 
 let editCode;
 let connect;
@@ -240,7 +238,7 @@ function setupTestMode() {
     addLeftClassificationLabelButton.mousePressed(() => {
       leftClassificationLabel.value("Left Class");
       leftClassificationLabel.visible(true);
-      splashLeft.trigger();
+      leftClassificationLabel.triggerSplash();
     });
     addRightClassificationLabelButton = createButton("Add Right Class");
     addRightClassificationLabelButton.position(width - 100, height / 3.3);
@@ -248,7 +246,7 @@ function setupTestMode() {
     addRightClassificationLabelButton.mousePressed(() => {
       rightClassificationLabel.value("Right Class");
       rightClassificationLabel.visible(true);
-      splashRight.trigger();
+      rightClassificationLabel.triggerSplash();
     });
 
     // Add photo grid test buttons
@@ -303,8 +301,8 @@ function setupLoadModelButton() {
             labels = response.labels;
             isModelLoaded = true;
             classifyVideo();
-            leftClassificationLabel.value(labels[0]);
-            rightClassificationLabel.value(labels[1]);
+            leftClassificationLabel.value(labels[1]);
+            rightClassificationLabel.value(labels[0]);
             leftClassificationLabel.visible(true);
             rightClassificationLabel.visible(true);
           }
@@ -326,16 +324,15 @@ function setupLoadModelButton() {
 
 function setupClassificationBarAndLabels() {
   const classificationLabelY = height / 3.3;
+  const classificationLabelXLeft = width / 2 - 314; 
+  const classificationLabelXRight = width / 2 + 314;
   const classificationLabelWidth = 200;
   const classificationLabelHeight = 48;
   const classificationLabelRadius = 9;
 
   classificationIndicator = new ClassificationBar(width / 2, classificationLabelY, min(width / 4, 341), 28, 5);
-  leftClassificationLabel = new ClassificationLabel(width / 2 - 314, classificationLabelY, classificationLabelWidth, classificationLabelHeight, classificationLabelRadius, true);
-  rightClassificationLabel = new ClassificationLabel(width / 2 + 314, classificationLabelY, classificationLabelWidth, classificationLabelHeight, classificationLabelRadius, false);
-  splashLeft = new Splash(width / 2 - 314, classificationLabelY, classificationLabelWidth, classificationLabelHeight, true);
-  splashRight = new Splash(width / 2 + 314, classificationLabelY, classificationLabelWidth, classificationLabelHeight, false);
-
+  leftClassificationLabel = new ClassificationLabel(classificationLabelXLeft, classificationLabelY, classificationLabelWidth, classificationLabelHeight, classificationLabelRadius, true);
+  rightClassificationLabel = new ClassificationLabel(classificationLabelXRight, classificationLabelY, classificationLabelWidth, classificationLabelHeight, classificationLabelRadius, false);;
 } // end setupClassificationBarAndLabels()
 
 function setupPhotoGrids() {
@@ -465,8 +462,7 @@ function draw() {
     rightGrid.render();
     rectMode(CORNER);
     loadModel.draw();
-    splashLeft.render();
-    splashRight.render();
+
     classificationIndicator.render();
     leftClassificationLabel.render();
     rightClassificationLabel.render();

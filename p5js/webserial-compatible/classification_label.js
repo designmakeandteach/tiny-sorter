@@ -19,7 +19,6 @@ class Splash {
     this.explosionIndex = 0;
     this.numRadius = 4;
     this.radiusOffset = 10;
-
   }
 
   trigger() {
@@ -34,27 +33,30 @@ class Splash {
   render() {
     if (!this.isExploding) {
       fill(this.color);
-      // rect(this.x, this.y, this.width, this.height);
+      // rect(this.x - (this.width - this.radiusOffset/2) / 2, this.y - (this.height - this.radiusOffset/2) / 2, this.width + this.radiusOffset, this.height + this.radiusOffset);
     } else {
       noFill();
       strokeWeight(3);
       stroke(this.color);
+      let size_offset = this.radiusOffset * this.explosionIndex;
+      let pos_offset = size_offset / 2;
+
       rect(
         this.x,
         this.y,
-        this.width + this.radiusOffset * this.explosionIndex,
-        this.height + this.radiusOffset * this.explosionIndex,
-        9,
-        9,
-        9,
-        9
+        this.width + size_offset,
+        this.height + size_offset,
+        this.radiusOffset,
+        this.radiusOffset,
+        this.radiusOffset,
+        this.radiusOffset
       );
     }
 
     if (this.isExploding && !this.isInbetweenUpdates) {
       setTimeout(() => {
         this.updateIndex();
-      }, 100);
+      }, 75);
       this.isInbetweenUpdates = true;
     }
 
@@ -79,6 +81,7 @@ class ClassificationLabel {
     this.isLeft = isLeft;
     this.text_value = "";
     this.is_visible = false;
+    this.splash = new Splash(x, y, width, height, isLeft);
   }
 
   /**
@@ -97,10 +100,16 @@ class ClassificationLabel {
     this.is_visible = visible;
   }
 
+  triggerSplash() {
+    this.splash.trigger();
+  }
+
   /**
    * Render the classification label.
    */
   render() {
+    this.splash.render();
+
     if (this.is_visible) {
       fill(255);
       rectMode(CENTER);
