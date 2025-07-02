@@ -195,7 +195,6 @@ function setConnectButtonText(text) {
 
 /**
  * Create the button at the top right of the screen that allows the user to connect to the serial port
- * @returns {Clickable}
  */
 function setupConnectButton() {
   if (connectButton) {
@@ -207,10 +206,10 @@ function setupConnectButton() {
   connectButton.position(width - 200, 20);
   connectButton.id("connectButton");
   connectButton.style("height", "40px");
+  connectButton.style("width", "200px");
   connectButton.style("border-width", "0px");
   connectButton.style("background-color", bgColor);
   connectButton.style("font-size", "18px");
-  connectButton.style("width", "200px");
   connectButton.style("color", "#1967D2");
   connectButton.mouseClicked(() => {
     if (!serialPort.opened()) {
@@ -242,6 +241,40 @@ function ensureTrailingSlash(url) {
 }
 
 /**
+ * Called when the model metadata is successfully fetched.
+ * 
+ * @param {Object} response - The response object containing the model metadata.
+ */
+function modelFetchSuccess(response) {
+  if (response.labels.length <= 2) {
+    alert(
+      "Train a model with at least three classes: one for each type of object you want to sort, and one for the empty sorter"
+    );
+    isModelLoaded = false;
+  } else {
+    modelLabels = response.labels;
+    makeClassificationLabelsVisible();
+    if (modelLabels.length > 1) {
+      setLoadModelButtonText("MODEL LOADED");
+      setTimeout(() => {
+        setLoadModelButtonText("REFRESH MODEL");
+      }, 3000);
+    }
+    isModelLoaded = true;
+  }
+}
+
+/**
+ * Set the text of the load model button in the DOM.
+ * @param {*} text 
+ */
+function setLoadModelButtonText(text) {
+  const loadModelButton = document.querySelector("#loadModel");
+  if (loadModelButton) {
+    loadModelButton.textContent = text;
+  }
+}
+/**
  * Create the load model button. Called for first time setup only.
  */
 function setupLoadModelButton() {
@@ -250,50 +283,37 @@ function setupLoadModelButton() {
     loadModelButton = null;
   }
 
-  loadModelButton = new Clickable();
-  loadModelButton.resize(145, 40);
-  loadModelButton.locate(300, 15);
-  loadModelButton.strokeWeight = 0;
-  loadModelButton.color = bgColor;
-  loadModelButton.text = "LOAD MODEL";
-  loadModelButton.textSize = 18;
-  loadModelButton.textColor = "#1967d2";
-  loadModelButton.onPress = () => {
+  loadModelButton = createButton("LOAD MODEL");
+  loadModelButton.id("loadModel");
+  loadModelButton.position(300, 15);
+  loadModelButton.style("height", "40px");
+  loadModelButton.style("width", "145px");
+  loadModelButton.style("border-width", "0px");
+  loadModelButton.style("background-color", bgColor);
+  loadModelButton.style("font-size", "18px");
+  loadModelButton.style("color", "#1967d2");
+  loadModelButton.mouseClicked(() => {
     try {
       let modelUrl = ensureTrailingSlash(modelInput.value());
       console.log(`Loading Tensorflow Model at: ${modelUrl}`);
       classifier = ml5.imageClassifier(modelUrl + "model.json");
 
       httpGet(
-        modelUrl + "metadata.json",
-        "json",
-        false,
-        (response) => {
-          if (response.labels.length <= 2) {
-            alert(
-              "Train a model with at least three classes: one for each type of object you want to sort, and one for the empty sorter"
-            );
-
-          } else {
-            modelLabels = response.labels;
-            isModelLoaded = true;
-            makeClassificationLabelsVisible();
-
-          }
-        },
-        (error) => alert("invalid TM2 url")
+        modelUrl + "metadata.json",  // path
+        "json", // datatype
+        false, // data
+        modelFetchSuccess, // callback on success
+        (error) => {
+          alert("Invalid Teachable Machine2 url: " + modelUrl);
+          setLoadModelButtonText("INVALID URL");
+          isModelLoaded = false;
+        }
       );
     } catch (e) {
-      loadModelButton.text = "INVALID URL";
+      setLoadModelButtonText("INVALID URL");
+      isModelLoaded = false;
     }
-    if (modelLabels.length > 1) {
-      loadModelButton.text = "MODEL LOADED";
-      setTimeout(() => {
-        loadModelButton.text = "REFRESH MODEL";
-      }, 3000);
-
-    }
-  };
+  });
 }  // end setupLoadModelButton()
 
 /**
@@ -523,7 +543,6 @@ function draw() {
     leftPhotoGrid.draw();
     rightPhotoGrid.draw();
     rectMode(CORNER);
-    loadModelButton.draw();
 
     classificationBar.draw();
     leftClassificationLabel.draw();
