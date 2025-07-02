@@ -1,24 +1,30 @@
 <!DOCTYPE html>
-<html><head>
-  <script src="https://cdn.jsdelivr.net/npm/p5@0.9.0/lib/p5.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/addons/p5.dom.min.js"></script>
-  
-  <script src="https://unpkg.com/ml5@0.4.3/dist/ml5.min.js"></script>
-  <link href="https://fonts.googleapis.com/css?family=Poppins&amp;display=swap" rel="stylesheet">
+<html>
 
-  <link rel="stylesheet" type="text/css" href="style.css">
-  <link rel="stylesheet" type="text/css" href="purejscarousel.css">
-  <meta charset="utf-8">
-  
-  <script src="CanvasInput.min.js"></script>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tiny Sorter 2025</title>
+
+  <!-- p5.js core library -->
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.11.8/lib/p5.min.js"></script>
+
+  <!-- ML5 Library - for using TensorFlow.js -->
+  <script src="https://unpkg.com/ml5@0.4.3/dist/ml5.min.js"></script>
+
+  <!-- Add ons -->
+  <!-- webserial API wrapper for p5.js from https://github.com/gohai/p5.webserial -->
+  <script src="p5.webserial.js"></script>
+
+  <!-- p5.clickable: Create buttons with 'Clickable' class -->
   <script src="p5.clickable.js"></script>
+
+  <link href="https://fonts.googleapis.com/css?family=Poppins&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 
 <body>
-
   <script src="sketch.js"></script>
-  <script src="serial.js"></script>
+</body>
 
-
-
-</body></html>
+</html>

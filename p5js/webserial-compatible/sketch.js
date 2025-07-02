@@ -194,20 +194,18 @@ class ClassificationBar {
     let view = new Uint8Array(1);
 
     if (class1[0].confidence > 0.9) {
-      view[0] = 1;
       try {
         console.log("Sending Class 1 Detected")
-        port.send(view);
+        serialPort.write("1");
         shouldFreezeFrame = true;
         splashLeft.trigger();
 
         isLeftPic = false;
       } catch (e) {}
     } else if (class2[0].confidence > 0.9) {
-      view[0] = 2;
       try {
         console.log("Sending Class 2 Detected")
-        port.send(view);
+        serialPort.write("2");
         shouldFreezeFrame = true;
         splashRight.trigger();
         isLeftPic = true;
@@ -390,6 +388,8 @@ class ClassInput {
   }
 }
 
+const connectLabel = "CONNECT MICROPROCESSOR"
+const disconnectLabel = "DISCONNECT MICROPROCESSOR"
 // Classifier Variable
 let classifier;
 let input;
@@ -448,6 +448,60 @@ let enteredText = "";
 function myInputEvent() {
   enteredText = this.value().trim();
 }
+
+function initSerialPort() {
+  let port = createSerial();
+
+  let usedPorts = usedSerialPorts();
+  if (usedPorts.length > 0) {
+    port.open(usedPorts[0], 9600);
+    setConnectButtonText(disconnectLabel);
+  }
+  return port;
+}
+
+function setConnectButtonText(text) {
+  const connectButton = document.querySelector("#connect");
+  if (connectButton) {
+    connectButton.textContent = text;
+  }
+}
+
+/**
+ * Callback function for the connect button
+ */
+function connectClicked() {
+  if (!serialPort.opened()) {
+    console.log("Opening serial port");
+    serialPort.open(9600);
+    setConnectButtonText(disconnectLabel);
+  } else {
+    console.log("Closing serial port");
+    serialPort.close();
+    setConnectButtonText(connectLabel);
+  }
+}
+  
+/**
+ * Create the button at the top right of the screen that allows the user to connect to the serial port
+ * @returns {Clickable}
+ */
+function initConnectButton() {
+
+  let connect = createButton(connectLabel);
+  connect.position(width - 200, 20);
+  connect.id("connect");
+  connect.style("height", "40px");
+  connect.style("border-width", "0px");
+  connect.style("background-color", bgColor);
+  connect.style("font-family", "Poppins");
+  connect.style("font-size", "18px");
+  connect.style("width", "200px");
+  connect.style("color", "#1967D2");
+  connect.mouseClicked(connectClicked);
+  return connect;
+}
+
 
 function setup() {
   createCanvas(window.innerWidth, window.innerHeight);
@@ -517,7 +571,8 @@ function setup() {
   loadModel.textFont = poppinsRegular;
   shouldFeezeFrame = false;
   hasSetPauseTimer = false;
-  var serial = {};
+
+ 
 
   modelInput = createInput();
   modelInput.input(myInputEvent);
@@ -535,16 +590,9 @@ function setup() {
   modelInput.style("color", "#669df6");
   modelInput.attribute("placeholder", "Paste model link here");
 
-  connect = createButton("CONNECT ARDUINO");
-  connect.position(width - 200, 20);
-  connect.id("connect");
-  connect.style("height", "40px");
-  connect.style("border-width", "0px");
-  connect.style("background-color", bgColor);
-  connect.style("font-family", "Poppins");
-  connect.style("font-size", "18px");
-  connect.style("width", "200px");
-  connect.style("color", "#1967D2");
+  connect = initConnectButton();
+  serialPort = initSerialPort();
+  
   leftAdd = debounce(
     () => {
       leftGrid.addImage(selectPic);
