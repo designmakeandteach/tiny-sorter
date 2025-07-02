@@ -9,9 +9,9 @@ let serialPort;
 
 // UI Elements
 let modelInput;
-let loadModel;
-let cameraBorder;
-let putSorter;
+let loadModelButton;
+let cameraBorderImage;
+let putSorterImage;
 let connectButton;
 let classificationBar;
 let leftPhotoGrid;
@@ -19,17 +19,16 @@ let video;
 let rightPhotoGrid;
 let leftClassificationLabel;
 let rightClassificationLabel;
-let editCode;
+let editCodeLink;
 
 // Other State
 let isLeftPic;
 let videoSize;
 let bgColor = "#e8f0fe";
 let shouldFreezeFrame;
-let labels = [];
+let modelLabels = [];
 let hasSetPauseTimer;
 let isModelLoaded = false;
-let enteredText = "";
 
 function initSerialPort() {
   let port = createSerial();
@@ -87,31 +86,40 @@ function setupConnectButton() {
   }
 }
 
+/**
+ * Ensure that the string has a trailing slash. Common mistake when pasting in the URL.
+ * @param {string} str 
+ * @returns {string}
+ */
+function ensureTrailingSlash(url) {
+  url = url.trim();
+  return url.charAt(url.length - 1) === '/' ? url : url + '/';
+}
 
-// Called for first time setup only.
+
+// Create the load model button. Called for first time setup only.
 function setupLoadModelButton() {
-  if (loadModel) {
-    loadModel.remove();
-    loadModel = null;
+  if (loadModelButton) {
+    loadModelButton.remove();
+    loadModelButton = null;
   }
 
-  loadModel = new Clickable();
-
-  loadModel.resize(145, 40);
-
-  loadModel.locate(300, 15);
-  loadModel.strokeWeight = 0;
-  loadModel.color = bgColor;
-  loadModel.text = "LOAD MODEL";
-  loadModel.textSize = 18;
-  loadModel.textColor = "#1967d2";
-  loadModel.onPress = () => {
+  loadModelButton = new Clickable();
+  loadModelButton.resize(145, 40);
+  loadModelButton.locate(300, 15);
+  loadModelButton.strokeWeight = 0;
+  loadModelButton.color = bgColor;
+  loadModelButton.text = "LOAD MODEL";
+  loadModelButton.textSize = 18;
+  loadModelButton.textColor = "#1967d2";
+  loadModelButton.onPress = () => {
     try {
-      console.log(enteredText + "metadata.json");
-      classifier = ml5.imageClassifier(enteredText + "model.json");
+      let modelUrl = ensureTrailingSlash(modelInput.value());
+      console.log(`Loading Tensorflow Model at: ${modelUrl}`);
+      classifier = ml5.imageClassifier(modelUrl + "model.json");
 
       httpGet(
-        enteredText + "metadata.json",
+        modelUrl + "metadata.json",
         "json",
         false,
         (response) => {
@@ -121,7 +129,7 @@ function setupLoadModelButton() {
             );
 
           } else {
-            labels = response.labels;
+            modelLabels = response.labels;
             isModelLoaded = true;
             classifyVideo();
             makeClassificationLabelsVisible();
@@ -131,12 +139,12 @@ function setupLoadModelButton() {
         (error) => alert("invalid TM2 url")
       );
     } catch (e) {
-      loadModel.text = "INVALID URL";
+      loadModelButton.text = "INVALID URL";
     }
-    if (labels.length > 1) {
-      loadModel.text = "MODEL LOADED";
+    if (modelLabels.length > 1) {
+      loadModelButton.text = "MODEL LOADED";
       setTimeout(() => {
-        loadModel.text = "REFRESH MODEL";
+        loadModelButton.text = "REFRESH MODEL";
       }, 3000);
 
     }
@@ -144,8 +152,8 @@ function setupLoadModelButton() {
 }  // end setupLoadModelButton()
 
 function makeClassificationLabelsVisible() {
-  leftClassificationLabel.value(labels[1]);
-  rightClassificationLabel.value(labels[0]);
+  leftClassificationLabel.value(modelLabels[1]);
+  rightClassificationLabel.value(modelLabels[0]);
   leftClassificationLabel.visible(true);
   rightClassificationLabel.visible(true);
 }
@@ -196,23 +204,23 @@ function setupPhotoGrids() {
 } // end setupPhotoGrids()
 
 function setupEditCodeLink() {
-  if (editCode) {
-    editCode.remove();
-    editCode = null;
+  if (editCodeLink) {
+    editCodeLink.remove();
+    editCodeLink = null;
   }
 
-  editCode = createA(
+  editCodeLink = createA(
     "https://editor.p5js.org/designmakeandteach/sketches/yiTc27eXT",
     "EDIT CODE",
     "_blank"
   );
-  editCode.position(width - 110, height - 40);
-  editCode.style("height", "40px");
-  editCode.style("border-width", "0px");
-  editCode.style("background-color", bgColor);
-  editCode.style("font-size", "18px");
-  editCode.style("width", "200px");
-  editCode.style("color", "#1967D2");
+  editCodeLink.position(width - 110, height - 40);
+  editCodeLink.style("height", "40px");
+  editCodeLink.style("border-width", "0px");
+  editCodeLink.style("background-color", bgColor);
+  editCodeLink.style("font-size", "18px");
+  editCodeLink.style("width", "200px");
+  editCodeLink.style("color", "#1967D2");
 } // end setupEditCodeLink()
 
 function setupModelInput() {
@@ -222,9 +230,7 @@ function setupModelInput() {
   }
 
   modelInput = createInput();
-  modelInput.input(() => {
-    enteredText = this.value().trim();
-  });
+
   modelInput.position(20, 20);
   modelInput.style("height", "35px");
   modelInput.style("width", "267px");
@@ -284,8 +290,7 @@ function setupTestMode() {
     });
 
     // seed the model URL
-    enteredText = "https://teachablemachine.withgoogle.com/models/eGyhdtfG9/";
-    modelInput.value(enteredText);
+    modelInput.value( "https://teachablemachine.withgoogle.com/models/eGyhdtfG9/");
 
   }
 } // end setupTestMode()
@@ -299,12 +304,12 @@ function setup() {
   shouldFeezeFrame = false;
   hasSetPauseTimer = false;
 
-  cameraBorder = loadImage("camera_border.png");
+  cameraBorderImage = loadImage("camera_border.png");
   putsorter = loadImage("put_sorter.png");
 
   // Initialize UI Components
-  setupLoadModelButton();
   setupModelInput();
+  setupLoadModelButton();
   setupConnectButton();
   setupPhotoGrids();
   setupClassificationBarAndLabels();
@@ -366,7 +371,7 @@ function draw() {
       videoSize * 1.5
     );
     image(
-      cameraBorder,
+      cameraBorderImage,
       width / 2 - videoSize / 2 - 3,
       height / 1.6 - videoSize / 2 - 3,
       videoSize + 6,
@@ -376,7 +381,7 @@ function draw() {
     leftPhotoGrid.draw();
     rightPhotoGrid.draw();
     rectMode(CORNER);
-    loadModel.draw();
+    loadModelButton.draw();
 
     classificationBar.draw();
     leftClassificationLabel.draw();
@@ -398,13 +403,13 @@ function classifyVideo() {
 function updateClassification(results) {
   // console.log(results);
   const class1 = results.filter((objs) => {
-    if (objs.label === labels[0]) {
+    if (objs.label === modelLabels[0]) {
       return objs;
     }
   });
 
   const class2 = results.filter((objs) => {
-    if (objs.label === labels[1]) {
+    if (objs.label === modelLabels[1]) {
       return objs;
     }
   });
