@@ -1,75 +1,4 @@
-/**
- * A p5 element that renders around the classification label when a classification is detected.
- * 
- * @param {boolean} isLeft - Whether the splash screen is on the left or right side of the screen.
- */
-class Splash {
-  constructor(isLeft) {
-    if (isLeft) {
-      this.x = width / 2 + 314;
-    } else {
-      this.x = width / 2 - 314;
-    }
-    this.y = height / 3.3;
-    this.color = color(22, 79, 200);
-    this.isExploding = false;
-    this.isInbetweenUpdates = false;
-    this.explosionRadius = 100;
-    this.explosionIndex = 0;
-    this.numRadius = 4;
-    this.radiusOffset = 10;
-    this.width = 243;
-    this.height = 53;
-  }
 
-  updatePosition(x, y) {
-    this.x = x;
-    this.y = y;
-  }
-
-  trigger() {
-    this.isExploding = true;
-  }
-
-  updateIndex() {
-    this.explosionIndex++;
-    this.isInbetweenUpdates = false;
-  }
-
-  render() {
-    if (!this.isExploding) {
-      fill(this.color);
-      // rect(this.x, this.y, this.width, this.height);
-    } else {
-      noFill();
-      strokeWeight(3);
-      stroke(this.color);
-      rect(
-        this.x,
-        this.y,
-        this.width + this.radiusOffset * this.explosionIndex,
-        this.height + this.radiusOffset * this.explosionIndex,
-        9,
-        9,
-        9,
-        9
-      );
-    }
-
-    if (this.isExploding && !this.isInbetweenUpdates) {
-      setTimeout(() => {
-        this.updateIndex();
-      }, 100);
-      this.isInbetweenUpdates = true;
-    }
-
-    if (this.explosionIndex >= this.numRadius) {
-      this.isExploding = false;
-      this.isInbetweenUpdates = false;
-      this.explosionIndex = 0;
-    }
-  }
-}
 
 /**
  * A p5 element that renders a bar that indicates the classification confidence.
@@ -77,12 +6,12 @@ class Splash {
  * @param {boolean} isLeft - Whether the classification bar is on the left or right side of the screen.
  */
 class ClassificationBar {
-  constructor() {
-    this.width = min(width / 4, 341);
-    this.height = 28;
-    this.x = width / 2;
-    this.y = height / 3.3;
-    this.radius = 5;
+  constructor(x, y, width, height, radius) {
+    this.x = x
+    this.y = y
+    this.width = width;
+    this.height = height;
+    this.radius = radius;
 
     this.classificationLeft = 0;
     this.classificationMaxWidth = this.width / 2;
@@ -187,96 +116,6 @@ class ClassificationBar {
   }
 }
 
-class ClassInput {
-  constructor(isLeft) {
-    this.width = 200;
-    this.height = 53;
-    this.radius = 9;
-    this.textLineOffset = 40;
-    this.isLeft = isLeft;
-    this.hoverOne = false;
-    this.hoverTwo = false;
-    this.hoverThree = true;
-    if (isLeft === true) {
-      this.x = width / 2 + 314;
-    } else {
-      this.x = width / 2 - 314;
-    }
-
-    this.y = height / 3.3;
-    this.isActive = false;
-    this.currentValue = null;
-  }
-
-  onClick(x, y) {
-    const leftBound = this.x - this.width / 2;
-    const rightBound = this.x + this.width / 2;
-    const bottomBound = this.y + this.height / 2;
-    const topBound = this.y - this.height / 2;
-    const isInside =
-      x >= leftBound && x <= rightBound && y <= bottomBound && y >= topBound;
-
-    if (isInside) {
-      this.isActive = !this.isActive;
-    }
-  }
-
-  onHover(x, y) {
-    this.detectZone(x, y);
-  }
-
-  detectZone(x, y) {
-    const leftBound = this.x - this.width / 2;
-    const rightBound = this.x + this.width / 2;
-
-    const zoneOneBottom = this.y + this.height / 2;
-    const zoneOneTop = this.y - this.height / 2;
-
-    if (
-      x >= leftBound &&
-      x <= rightBound &&
-      y <= zoneOneTop &&
-      y >= zoneOneBottom
-    ) {
-      this.hoverOne = true;
-      this.hoverTwo = false;
-      this.hoverThree = false;
-      return 1;
-    }
-  }
-  render() {
-    if (isModelLoaded) {
-      fill(255);
-      rectMode(CENTER);
-      noStroke();
-      textFont(poppinsBold);
-      textSize(24);
-      // if (!this.isActive) {
-
-      rect(
-        this.x,
-        this.y,
-        this.width,
-        this.height,
-        this.radius,
-        this.radius,
-        this.radius,
-        this.radius
-      );
-
-      if (labels.length >= 2) {
-        fill("#1967D2");
-        if (this.isLeft) {
-          textAlign(LEFT, CENTER);
-          text(labels[0], this.x - this.width / 2 + 10, this.y - 4);
-        } else {
-          textAlign(RIGHT, CENTER);
-          text(labels[1], this.x + this.width / 2 - 13, this.y - 4);
-        }
-      }
-    }
-  }
-}
 
 const connectLabel = "CONNECT MICROPROCESSOR"
 const disconnectLabel = "DISCONNECT MICROPROCESSOR"
@@ -296,8 +135,8 @@ let rightGrid;
 
 let isLeftPic;
 
-let leftClassSelector;
-let rightClassSelector;
+let leftClassificationLabel;
+let rightClassificationLabel;
 
 let cameraBorder;
 let putSorter;
@@ -465,9 +304,9 @@ function setup() {
   leftGrid = new PhotoGrid(width / 2 - 480, photoGridY, 3, 2, 120, 20);
   rightGrid = new PhotoGrid(width / 2 + 300, photoGridY, 3, 2, 120, 20);
 
-  classificationIndicator = new ClassificationBar();
-  leftClassSelector = new ClassInput(true);
-  rightClassSelector = new ClassInput(false);
+  classificationIndicator = new ClassificationBar(width / 2, height / 3.3, min(width / 4, 341), 28, 5);
+  leftClassificationLabel = new ClassificationLabel(true);
+  rightClassificationLabel = new ClassificationLabel(false);
   splashRight = new Splash(false);
   splashLeft = new Splash(true);
   poppinsRegular = loadFont("Poppins-Regular.ttf");
@@ -576,8 +415,8 @@ function draw() {
     rectMode(CORNER);
     loadModel.draw();
     classificationIndicator.render();
-    leftClassSelector.render();
-    rightClassSelector.render();
+    leftClassificationLabel.render();
+    rightClassificationLabel.render();
     splashLeft.render();
     splashRight.render();
   } else {
@@ -619,8 +458,8 @@ function windowResized() {
   leftGrid.images = leftPhotos;
   rightGrid.images = rightPhotos;
   classificationIndicator = new ClassificationBar();
-  leftClassSelector = new ClassInput(true);
-  rightClassSelector = new ClassInput(false);
+  leftClassificationLabel = new ClassInput(true);
+  rightClassificationLabel = new ClassInput(false);
   splashRight = new Splash(false);
   splashLeft = new Splash(true);
   loadModel = new Clickable();
@@ -640,14 +479,4 @@ function windowResized() {
   };
   // connect.textFont = poppinsRegular;
   loadModel.textFont = poppinsRegular;
-}
-
-function mousePressed() {
-  leftClassSelector.onClick(mouseX, mouseY);
-  rightClassSelector.onClick(mouseX, mouseY);
-}
-
-function mouseMoved() {
-  leftClassSelector.onHover(mouseX, mouseY);
-  rightClassSelector.onHover(mouseX, mouseY);
 }
