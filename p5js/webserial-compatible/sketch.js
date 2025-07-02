@@ -1,5 +1,6 @@
 const connectLabel = "CONNECT MICROPROCESSOR"
 const disconnectLabel = "DISCONNECT MICROPROCESSOR"
+const classifyDelay = 100;
 const videoSize = 250;
 const videoPauseDelay = 2000;
 const bgColor = "#e8f0fe";
@@ -26,10 +27,11 @@ let editCodeLink;
 
 // Other State
 let isLeftPic;
-let shouldFreezeFrame;
 let modelLabels = [];
-let hasSetPauseTimer;
+let hasSetVideoPauseTimer = false; // True if the video has been paused
+let lastClassifyTime = 0;
 let isModelLoaded = false;
+let lastClassifiedImage = null; // serves as a sentinel to keep from running the lassifier to frequently and also stores the last image sent to the classifier
 
 function initSerialPort() {
   let port = createSerial();
@@ -132,7 +134,6 @@ function setupLoadModelButton() {
           } else {
             modelLabels = response.labels;
             isModelLoaded = true;
-            classifyVideo();
             makeClassificationLabelsVisible();
 
           }
@@ -195,7 +196,7 @@ function setupPhotoGrids() {
 
   let photoGridY = height / 2.5;
   leftPhotoGrid = new PhotoGrid(width / 2 - 480, photoGridY, 3, 2, 120, 20);
-  rightPhotoGrid = new PhotoGrid(width / 2 + 300, photoGridY, 3, 2, 120, 20);
+  rightPhotoGrid = new PhotoGrid(width / 2 + 260, photoGridY, 3, 2, 120, 20);
 
   // Restore the photos if they were saved
   if (leftPhotos) {
@@ -290,7 +291,6 @@ function setupTestMode() {
 
     // seed the model URL
     modelInput.value("https://teachablemachine.withgoogle.com/models/eGyhdtfG9/");
-
   }
 } // end setupTestMode()
 
@@ -300,7 +300,7 @@ function setup() {
   video = createCapture(VIDEO);
   video.hide();
   shouldFeezeFrame = false;
-  hasSetPauseTimer = false;
+  hasSetVideoPauseTimer = false;
 
   cameraBorderImage = loadImage("camera_border.png");
   putsorter = loadImage("put_sorter.png");
@@ -316,12 +316,6 @@ function setup() {
 
   // Initialize the serial port
   serialPort = initSerialPort();
-
-  // Start classifying
-  if (isModelLoaded) {
-    classifyVideo();
-  }
-
 } // end setup()
 
 function draw() {
@@ -329,20 +323,6 @@ function draw() {
   if (width > 700) {
     background(bgColor);
 
-    if (shouldFreezeFrame && !hasSetPauseTimer) {
-      video.pause();
-      let selectPic = getCroppedVideoImage();
-      if (isLeftPic) {
-        leftPhotoGrid.addImage(selectPic);
-      } else {
-        rightPhotoGrid.addImage(selectPic);
-      }
-      setTimeout(() => {
-        video.play();
-        hasSetPauseTimer = false;
-        shouldFreezeFrame = false;
-      }, videoPauseDelay);
-    }
     image(
       putsorter,
       width / 2 - putsorter.width / 5,
@@ -384,22 +364,36 @@ function draw() {
     rightClassificationLabel.draw();
 
   } else {
+    // Tell the user to make the screen larger
     noStroke();
-
     text("expand page or ", width / 2, height / 1.6);
     text("load on a computer to use", width / 2, height / 1.5);
+  }
+  // Classify again after a timeout
+  if (Date.now() - lastClassifyTime > classifyDelay) {
+    classifyVideo();
+    lastClassifyTime = Date.now();
   }
 }
 
 function getCroppedVideoImage() {
-  return video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
+  //return video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
+  return video.get();
 }
 
-// Get a prediction for the current video frame
-function classifyVideo() {
-  classifier.classify(video, processClassificationResult);
+function pauseVideo() {
+  if (!hasSetVideoPauseTimer) {
+    hasSetVideoPauseTimer = true;
+    video.pause();
+    setTimeout(() => {
+      video.play();
+      hasSetVideoPauseTimer = false;
+    }, videoPauseDelay);
+  }
 }
 
+// The results are in an array ordered by confidence.
+// console.log(results[0]);
 function updateClassification(results) {
   // console.log(results);
   const class1 = results.filter((objs) => {
@@ -423,10 +417,11 @@ function updateClassification(results) {
         console.log("Sending Class 2 Detected")
         serialPort.write("2");
       }
-      shouldFreezeFrame = true;
       rightClassificationLabel.triggerSplash();
-
-      isLeftPic = false;
+      if (lastClassifiedImage) {
+        rightPhotoGrid.addImage(lastClassifiedImage);
+      }
+      pauseVideo();
     } catch (e) { }
   } else if (class2[0].confidence > 0.9) {
     try {
@@ -434,9 +429,11 @@ function updateClassification(results) {
         console.log("Sending Class 1 Detected")
         serialPort.write("1");
       }
-      shouldFreezeFrame = true;
       leftClassificationLabel.triggerSplash();
-      isLeftPic = true;
+      if (lastClassifiedImage) {
+        leftPhotoGrid.addImage(lastClassifiedImage);
+      }
+      pauseVideo();
     } catch (e) { }
   }
 }
@@ -444,19 +441,20 @@ function updateClassification(results) {
 function processClassificationResult(error, results) {
   // If there is an error
   if (error) {
-    console.error(error);
-    return;
+    console.error(`Error classifying image: ${error}`);
+  } else {
+    updateClassification(results);
   }
-  // The results are in an array ordered by confidence.
-  // console.log(results[0]);
-  updateClassification(results);
+  // Reset the last classified image so we can classify again
+  lastClassifiedImage = null;
+}
 
-  label = results[0].label;
-
-  // Classifiy again after a timeout
-  setTimeout(() => {
-    classifyVideo();
-  }, 250);
+// Get a prediction for the current video frame
+function classifyVideo() {
+  if (isModelLoaded && lastClassifiedImage === null && !hasSetVideoPauseTimer) {
+    lastClassifiedImage = getCroppedVideoImage();
+    classifier.classify(lastClassifiedImage, processClassificationResult);
+  }
 }
 
 function windowResized() {

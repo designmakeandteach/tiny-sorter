@@ -22,15 +22,19 @@ class Splash {
     this.explosionIndex = 0;
     this.maxExplosions = 4;
     this.radius = radius;
+    this.lastTriggerTime = 0;
   }
 
   /**
    * Trigger the animation sequence.
    */
-  trigger() {
+  trigger(delay = 75, duration = 1000) {
     if (!this.isExploding) {
       this.explosionIndex = 0;
       this.isExploding = true;
+      this.lastTriggerTime = Date.now();
+      this.triggerDelay = delay;
+      this.triggerDuration = duration;
     }
   }
 
@@ -56,12 +60,12 @@ class Splash {
     // Animate the explosion
     if (!this.isInbetweenUpdates) {
       setTimeout(() => {
-        this.explosionIndex++;
+        this.explosionIndex = (this.explosionIndex + 1) % this.maxExplosions;
         this.isInbetweenUpdates = false;
-      }, 75);
+      }, this.triggerDelay);
       this.isInbetweenUpdates = true;
 
-      if (this.explosionIndex >= this.maxExplosions) {
+      if (Date.now() - this.lastTriggerTime > this.triggerDuration) {
         this.isExploding = false;
       }
     }
