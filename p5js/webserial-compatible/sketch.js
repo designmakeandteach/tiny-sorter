@@ -1,21 +1,8 @@
-
-
-function debounce(func, wait, immediate) {
-  var timeout;
-  return function () {
-    var context = this,
-      args = arguments;
-    var later = function () {
-      timeout = null;
-      if (!immediate) func.apply(context, args);
-    };
-    var callNow = immediate && !timeout;
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-    if (callNow) func.apply(context, args);
-  };
-}
-
+/**
+ * A p5 element that renders around the classification label when a classification is detected.
+ * 
+ * @param {boolean} isLeft - Whether the splash screen is on the left or right side of the screen.
+ */
 class Splash {
   constructor(isLeft) {
     if (isLeft) {
@@ -83,6 +70,12 @@ class Splash {
     }
   }
 }
+
+/**
+ * A p5 element that renders a bar that indicates the classification confidence.
+ * 
+ * @param {boolean} isLeft - Whether the classification bar is on the left or right side of the screen.
+ */
 class ClassificationBar {
   constructor() {
     this.width = min(width / 4, 341);
