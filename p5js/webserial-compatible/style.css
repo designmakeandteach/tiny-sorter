@@ -4,10 +4,12 @@
   --input-color: #669df6;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
 }
+
 canvas {
   display: block;
 }
@@ -36,6 +38,7 @@ canvas {
 #connectButton {
   height: 40px;
   width: 200px;
+  padding-right: 10px;
 }
 
 #editCodeLink {
@@ -46,6 +49,19 @@ canvas {
   width: 200px;
   color: var(--primary-color);
   text-decoration: none;
+  padding-right: 10px;
+
+}
+
+#learnMoreLink {
+  height: 40px;
+  border-width: 0px;
+  background-color: var(--background-color);
+  font-size: 18px;
+  width: 200px;
+  color: var(--primary-color);
+  text-decoration: none;
+  padding-left: 10px;
 }
 
 #modelInput {
