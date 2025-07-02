@@ -1,124 +1,5 @@
 
 
-/**
- * A p5 element that renders a bar that indicates the classification confidence.
- * 
- * @param {boolean} isLeft - Whether the classification bar is on the left or right side of the screen.
- */
-class ClassificationBar {
-  constructor(x, y, width, height, radius) {
-    this.x = x
-    this.y = y
-    this.width = width;
-    this.height = height;
-    this.radius = radius;
-
-    this.classificationLeft = 0;
-    this.classificationMaxWidth = this.width / 2;
-    this.classificationRight = 0.0;
-    this.hasSetTimeout = false;
-  }
-
-  updateClassification(results) {
-    // console.log(results);
-    const class1 = results.filter((objs) => {
-      if (objs.label === labels[0]) {
-        return objs;
-      }
-    });
-
-    const class2 = results.filter((objs) => {
-      if (objs.label === labels[1]) {
-        return objs;
-      }
-    });
-
-    this.classificationLeft = map(
-      class1[0].confidence,
-      0,
-      1.0,
-      0,
-      this.classificationMaxWidth
-    );
-    this.classificationRight = map(
-      class2[0].confidence,
-      0,
-      1.0,
-      0,
-      this.classificationMaxWidth
-    );
-
-    let view = new Uint8Array(1);
-
-    if (class1[0].confidence > 0.9) {
-      try {
-        if (serialPort.opened()) {
-          console.log("Sending Class 1 Detected")
-          serialPort.write("1");
-        }
-        shouldFreezeFrame = true;
-        rightClassificationLabel.triggerSplash();
-
-        isLeftPic = false;
-      } catch (e) { }
-    } else if (class2[0].confidence > 0.9) {
-      try {
-        if (serialPort.opened()) {
-          console.log("Sending Class 2 Detected")
-          serialPort.write("2");
-        }
-        shouldFreezeFrame = true;
-        leftClassificationLabel.triggerSplash();
-        isLeftPic = true;
-      } catch (e) { }
-    }
-  }
-
-  render() {
-    //Draw Background rectangle
-    rectMode(CENTER);
-    fill("rgba(174, 203, 250, 0.4)");
-    stroke(255);
-    strokeWeight(5);
-    rect(
-      this.x,
-      this.y,
-      this.width,
-      this.height,
-      this.radius,
-      this.radius,
-      this.radius,
-      this.radius
-    );
-    noStroke();
-
-    fill("#1967d2");
-    rect(
-      this.x + this.classificationLeft / 2,
-      this.y,
-      this.classificationLeft,
-      this.height,
-      this.radius,
-      this.radius,
-      this.radius,
-      this.radius
-    );
-    rect(
-      this.x - this.classificationRight / 2,
-      this.y,
-      this.classificationRight,
-      this.height,
-      this.radius,
-      this.radius,
-      this.radius,
-      this.radius
-    );
-    stroke(0);
-    strokeWeight(7);
-    strokeCap(ROUND);
-    line(this.x, this.y - this.height / 2, this.x, this.y + this.height / 2);
-  }
-}
 
 
 const connectLabel = "CONNECT MICROPROCESSOR"
@@ -481,6 +362,47 @@ function classifyVideo() {
   // classifier.classify(video, () => {});
 }
 
+function updateClassification(results) {
+  // console.log(results);
+  const class1 = results.filter((objs) => {
+    if (objs.label === labels[0]) {
+      return objs;
+    }
+  });
+
+  const class2 = results.filter((objs) => {
+    if (objs.label === labels[1]) {
+      return objs;
+    }
+  });
+
+  classificationIndicator.setConfidenceLeft(class1[0].confidence);
+  classificationIndicator.setConfidenceRight(class2[0].confidence);
+
+  if (class1[0].confidence > 0.9) {
+    try {
+      if (serialPort.opened()) {
+        console.log("Sending Class 1 Detected")
+        serialPort.write("1");
+      }
+      shouldFreezeFrame = true;
+      rightClassificationLabel.triggerSplash();
+
+      isLeftPic = false;
+    } catch (e) { }
+  } else if (class2[0].confidence > 0.9) {
+    try {
+      if (serialPort.opened()) {
+        console.log("Sending Class 2 Detected")
+        serialPort.write("2");
+      }
+      shouldFreezeFrame = true;
+      leftClassificationLabel.triggerSplash();
+      isLeftPic = true;
+    } catch (e) { }
+  }
+}
+
 // When we get a result
 function gotResult(error, results) {
   // If there is an error
@@ -490,11 +412,14 @@ function gotResult(error, results) {
   }
   // The results are in an array ordered by confidence.
   // console.log(results[0]);
-  classificationIndicator.updateClassification(results);
+  updateClassification(results);
 
   label = results[0].label;
-  // Classifiy again!
-  classifyVideo();
+
+  // Classifiy again after a timeout
+  setTimeout(() => {
+    classifyVideo();
+  }, 250);
 }
 
 function windowResized() {
