@@ -1,95 +1,17 @@
 
 
-function debounce(func, wait, immediate) {
-  var timeout;
-  return function () {
-    var context = this,
-      args = arguments;
-    var later = function () {
-      timeout = null;
-      if (!immediate) func.apply(context, args);
-    };
-    var callNow = immediate && !timeout;
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-    if (callNow) func.apply(context, args);
-  };
-}
-
-class Splash {
-  constructor(isLeft) {
-    if (isLeft) {
-      this.x = width / 2 + 314;
-    } else {
-      this.x = width / 2 - 314;
-    }
-    this.y = height / 3.3;
-    this.color = color(22, 79, 200);
-    this.isExploding = false;
-    this.isInbetweenUpdates = false;
-    this.explosionRadius = 100;
-    this.explosionIndex = 0;
-    this.numRadius = 4;
-    this.radiusOffset = 10;
-    this.width = 243;
-    this.height = 53;
-  }
-
-  updatePosition(x, y) {
-    this.x = x;
-    this.y = y;
-  }
-
-  trigger() {
-    this.isExploding = true;
-  }
-
-  updateIndex() {
-    this.explosionIndex++;
-    this.isInbetweenUpdates = false;
-  }
-
-  render() {
-    if (!this.isExploding) {
-      fill(this.color);
-      // rect(this.x, this.y, this.width, this.height);
-    } else {
-      noFill();
-      strokeWeight(3);
-      stroke(this.color);
-      rect(
-        this.x,
-        this.y,
-        this.width + this.radiusOffset * this.explosionIndex,
-        this.height + this.radiusOffset * this.explosionIndex,
-        9,
-        9,
-        9,
-        9
-      );
-    }
-
-    if (this.isExploding && !this.isInbetweenUpdates) {
-      setTimeout(() => {
-        this.updateIndex();
-      }, 100);
-      this.isInbetweenUpdates = true;
-    }
-
-    if (this.explosionIndex >= this.numRadius) {
-      this.isExploding = false;
-      this.isInbetweenUpdates = false;
-      this.explosionIndex = 0;
-    }
-  }
-}
+/**
+ * A p5 element that renders a bar that indicates the classification confidence.
+ * 
+ * @param {boolean} isLeft - Whether the classification bar is on the left or right side of the screen.
+ */
 class ClassificationBar {
-  constructor() {
-    this.width = min(width / 4, 341);
-    this.height = 28;
-    this.x = width / 2;
-    this.y = height / 3.3;
-    this.radius = 5;
+  constructor(x, y, width, height, radius) {
+    this.x = x
+    this.y = y
+    this.width = width;
+    this.height = height;
+    this.radius = radius;
 
     this.classificationLeft = 0;
     this.classificationMaxWidth = this.width / 2;
@@ -130,19 +52,23 @@ class ClassificationBar {
 
     if (class1[0].confidence > 0.9) {
       try {
-        console.log("Sending Class 1 Detected")
-        serialPort.write("1");
+        if (serialPort.opened()) {
+          console.log("Sending Class 1 Detected")
+          serialPort.write("1");
+        }
         shouldFreezeFrame = true;
-        splashLeft.trigger();
+        rightClassificationLabel.triggerSplash();
 
         isLeftPic = false;
       } catch (e) { }
     } else if (class2[0].confidence > 0.9) {
       try {
-        console.log("Sending Class 2 Detected")
-        serialPort.write("2");
+        if (serialPort.opened()) {
+          console.log("Sending Class 2 Detected")
+          serialPort.write("2");
+        }
         shouldFreezeFrame = true;
-        splashRight.trigger();
+        leftClassificationLabel.triggerSplash();
         isLeftPic = true;
       } catch (e) { }
     }
@@ -194,96 +120,6 @@ class ClassificationBar {
   }
 }
 
-class ClassInput {
-  constructor(isLeft) {
-    this.width = 200;
-    this.height = 53;
-    this.radius = 9;
-    this.textLineOffset = 40;
-    this.isLeft = isLeft;
-    this.hoverOne = false;
-    this.hoverTwo = false;
-    this.hoverThree = true;
-    if (isLeft === true) {
-      this.x = width / 2 + 314;
-    } else {
-      this.x = width / 2 - 314;
-    }
-
-    this.y = height / 3.3;
-    this.isActive = false;
-    this.currentValue = null;
-  }
-
-  onClick(x, y) {
-    const leftBound = this.x - this.width / 2;
-    const rightBound = this.x + this.width / 2;
-    const bottomBound = this.y + this.height / 2;
-    const topBound = this.y - this.height / 2;
-    const isInside =
-      x >= leftBound && x <= rightBound && y <= bottomBound && y >= topBound;
-
-    if (isInside) {
-      this.isActive = !this.isActive;
-    }
-  }
-
-  onHover(x, y) {
-    this.detectZone(x, y);
-  }
-
-  detectZone(x, y) {
-    const leftBound = this.x - this.width / 2;
-    const rightBound = this.x + this.width / 2;
-
-    const zoneOneBottom = this.y + this.height / 2;
-    const zoneOneTop = this.y - this.height / 2;
-
-    if (
-      x >= leftBound &&
-      x <= rightBound &&
-      y <= zoneOneTop &&
-      y >= zoneOneBottom
-    ) {
-      this.hoverOne = true;
-      this.hoverTwo = false;
-      this.hoverThree = false;
-      return 1;
-    }
-  }
-  render() {
-    if (isModelLoaded) {
-      fill(255);
-      rectMode(CENTER);
-      noStroke();
-      textFont(poppinsBold);
-      textSize(24);
-      // if (!this.isActive) {
-
-      rect(
-        this.x,
-        this.y,
-        this.width,
-        this.height,
-        this.radius,
-        this.radius,
-        this.radius,
-        this.radius
-      );
-
-      if (labels.length >= 2) {
-        fill("#1967D2");
-        if (this.isLeft) {
-          textAlign(LEFT, CENTER);
-          text(labels[0], this.x - this.width / 2 + 10, this.y - 4);
-        } else {
-          textAlign(RIGHT, CENTER);
-          text(labels[1], this.x + this.width / 2 - 13, this.y - 4);
-        }
-      }
-    }
-  }
-}
 
 const connectLabel = "CONNECT MICROPROCESSOR"
 const disconnectLabel = "DISCONNECT MICROPROCESSOR"
@@ -303,13 +139,11 @@ let rightGrid;
 
 let isLeftPic;
 
-let leftClassSelector;
-let rightClassSelector;
+let leftClassificationLabel;
+let rightClassificationLabel;
 
 let cameraBorder;
 let putSorter;
-let splashLeft;
-let splashRight;
 
 let editCode;
 let connect;
@@ -323,8 +157,6 @@ let labels = [];
 let isLeftClassSelected = false;
 let isRightClassSelected = false;
 
-let poppinsRegular;
-let poppinsBold;
 let hasSetPauseTimer;
 
 let label = "";
@@ -381,7 +213,6 @@ function setupConnectButton() {
   connect.style("height", "40px");
   connect.style("border-width", "0px");
   connect.style("background-color", bgColor);
-  connect.style("font-family", "Poppins");
   connect.style("font-size", "18px");
   connect.style("width", "200px");
   connect.style("color", "#1967D2");
@@ -390,6 +221,7 @@ function setupConnectButton() {
 }
 
 /**
+ * Adds some extra controls to the UI to test the interface.
  * Add the query string "?test=true" to the URL to enable test mode.
  */
 function setupTestMode() {
@@ -399,32 +231,47 @@ function setupTestMode() {
 
   // Add extra UI tif we are testing
   if (test) {
-    addLeftButton = createButton("Add Left");
-    addLeftButton.position(0, height / 2);
-    addLeftButton.mousePressed(() => {
+
+    // Add classification label test buttons
+    addLeftClassificationLabelButton = createButton("Add Left Class");
+    addLeftClassificationLabelButton.position(0, height / 3.3);
+    addLeftClassificationLabelButton.mousePressed(() => {
+      leftClassificationLabel.value("Left Class");
+      leftClassificationLabel.visible(true);
+      leftClassificationLabel.triggerSplash();
+    });
+    addRightClassificationLabelButton = createButton("Add Right Class");
+    addRightClassificationLabelButton.position(width - 100, height / 3.3);
+    addRightClassificationLabelButton.style("width", "100px");
+    addRightClassificationLabelButton.mousePressed(() => {
+      rightClassificationLabel.value("Right Class");
+      rightClassificationLabel.visible(true);
+      rightClassificationLabel.triggerSplash();
+    });
+
+    // Add photo grid test buttons
+    addLeftPhotoButton = createButton("Add Left");
+    addLeftPhotoButton.position(0, height / 2);
+    addLeftPhotoButton.mousePressed(() => {
       let pic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
       leftGrid.addImage(pic);
     });
-    addRightButton = createButton("Add Right");
-    addRightButton.style("width", "100px");
-    addRightButton.position(width - 100, height / 2);
-    addRightButton.mousePressed(() => {
+    addRightPhotoButton = createButton("Add Right");
+    addRightPhotoButton.style("width", "100px");
+    addRightPhotoButton.position(width - 100, height / 2);
+    addRightPhotoButton.mousePressed(() => {
       let pic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
       rightGrid.addImage(pic);
     });
+
+    // seed the model URL
+    enteredText = "https://teachablemachine.withgoogle.com/models/eGyhdtfG9/";
+    modelInput.value(enteredText);
+
   }
-}
+} // end setupTestMode()
 
-function setup() {
-  createCanvas(window.innerWidth, window.innerHeight);
-  // Create the video
-  videoSize = 250;
-  video = createCapture(VIDEO);
-  video.hide();
-
-  cameraBorder = loadImage("camera_border.png");
-  putsorter = loadImage("put_sorter.png");
-
+function setupLoadModelButton() {
   loadModel = new Clickable();
 
   loadModel.resize(145, 40);
@@ -449,10 +296,15 @@ function setup() {
             alert(
               "Train a model with at least three classes: one for each type of object you want to sort, and one for the empty sorter"
             );
+          
           } else {
             labels = response.labels;
             isModelLoaded = true;
             classifyVideo();
+            leftClassificationLabel.value(labels[1]);
+            rightClassificationLabel.value(labels[0]);
+            leftClassificationLabel.visible(true);
+            rightClassificationLabel.visible(true);
           }
         },
         (error) => alert("invalid TM2 url")
@@ -465,22 +317,64 @@ function setup() {
       setTimeout(() => {
         loadModel.text = "REFRESH MODEL";
       }, 3000);
+
     }
   };
+}  // end setupLoadModelButton()
 
+function setupClassificationBarAndLabels() {
+  const classificationLabelY = height / 3.3;
+  const classificationLabelXLeft = width / 2 - 314; 
+  const classificationLabelXRight = width / 2 + 314;
+  const classificationLabelWidth = 200;
+  const classificationLabelHeight = 48;
+  const classificationLabelRadius = 9;
+
+  classificationIndicator = new ClassificationBar(width / 2, classificationLabelY, min(width / 4, 341), 28, 5);
+  leftClassificationLabel = new ClassificationLabel(classificationLabelXLeft, classificationLabelY, classificationLabelWidth, classificationLabelHeight, classificationLabelRadius, true);
+  rightClassificationLabel = new ClassificationLabel(classificationLabelXRight, classificationLabelY, classificationLabelWidth, classificationLabelHeight, classificationLabelRadius, false);;
+} // end setupClassificationBarAndLabels()
+
+function setupPhotoGrids() {
   let photoGridY = height / 2.5;
   leftGrid = new PhotoGrid(width / 2 - 480, photoGridY, 3, 2, 120, 20);
   rightGrid = new PhotoGrid(width / 2 + 300, photoGridY, 3, 2, 120, 20);
+} // end setupPhotoGrids()
 
-  classificationIndicator = new ClassificationBar();
-  leftClassSelector = new ClassInput(true);
-  rightClassSelector = new ClassInput(false);
-  splashRight = new Splash(false);
-  splashLeft = new Splash(true);
-  poppinsRegular = loadFont("Poppins-Regular.ttf");
-  poppinsBold = loadFont("Poppins-Bold.ttf");
+function setupEditCodeLink() {
+  if (editCode) {
+    editCode.remove();
+    editCode = null;
+  }
 
-  loadModel.textFont = poppinsRegular;
+  editCode = createA(
+    "https://editor.p5js.org/designmakeandteach/sketches/yiTc27eXT",
+    "EDIT CODE",
+    "_blank"
+  );
+  editCode.position(width - 110, height - 40);
+  editCode.style("height", "40px");
+  editCode.style("border-width", "0px");
+  editCode.style("background-color", bgColor);
+  editCode.style("font-size", "18px");
+  editCode.style("width", "200px");
+  editCode.style("color", "#1967D2");
+} // end setupEditCodeLink()
+
+function setup() {
+  createCanvas(window.innerWidth, window.innerHeight);
+  // Create the video
+  videoSize = 250;
+  video = createCapture(VIDEO);
+  video.hide();
+
+  cameraBorder = loadImage("camera_border.png");
+  putsorter = loadImage("put_sorter.png");
+
+  setupLoadModelButton();
+  setupPhotoGrids();
+  setupClassificationBarAndLabels();
+
   shouldFeezeFrame = false;
   hasSetPauseTimer = false;
 
@@ -494,7 +388,6 @@ function setup() {
   modelInput.style("border-width", "0px");
   modelInput.style("border-radius", "4px 4px 0px 0px");
   modelInput.style("border-bottom", "2px solid #1967d2");
-  modelInput.style("font-family", "Poppins");
   modelInput.style("font-size", "16px");
   modelInput.style("padding-left", "5px");
   modelInput.style("color", "#669df6");
@@ -503,19 +396,7 @@ function setup() {
   connect = setupConnectButton();
   serialPort = initSerialPort();
 
-  editCode = createA(
-    "https://editor.p5js.org/designmakeandteach/sketches/yiTc27eXT",
-    "EDIT CODE",
-    "_blank"
-  );
-  editCode.position(width - 110, height - 40);
-  editCode.style("height", "40px");
-  editCode.style("border-width", "0px");
-  editCode.style("background-color", bgColor);
-  editCode.style("font-family", "Poppins");
-  editCode.style("font-size", "18px");
-  editCode.style("width", "200px");
-  editCode.style("color", "#1967D2");
+  setupEditCodeLink();
 
   // Start classifying
   if (isModelLoaded) {
@@ -554,7 +435,6 @@ function draw() {
       putsorter.height / 2.5
     );
     noStroke();
-    textFont(poppinsBold);
     textAlign(CENTER, CENTER);
     textSize(14);
     text("enable webcam access", width / 2, height / 1.6);
@@ -582,11 +462,11 @@ function draw() {
     rightGrid.render();
     rectMode(CORNER);
     loadModel.draw();
+
     classificationIndicator.render();
-    leftClassSelector.render();
-    rightClassSelector.render();
-    splashLeft.render();
-    splashRight.render();
+    leftClassificationLabel.render();
+    rightClassificationLabel.render();
+
   } else {
     noStroke();
 
@@ -618,43 +498,20 @@ function gotResult(error, results) {
 }
 
 function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
+  resizeCanvas(windowWidth, windowHeight, true);
+  clear();
+  background(bgColor);
+
   const leftPhotos = leftGrid.images;
   const rightPhotos = rightGrid.images;
-  leftGrid = new PhotoGrid(true);
-  rightGrid = new PhotoGrid(false);
+
+  setupPhotoGrids();
+
   leftGrid.images = leftPhotos;
   rightGrid.images = rightPhotos;
-  classificationIndicator = new ClassificationBar();
-  leftClassSelector = new ClassInput(true);
-  rightClassSelector = new ClassInput(false);
-  splashRight = new Splash(false);
-  splashLeft = new Splash(true);
-  loadModel = new Clickable();
-  connect.position(width - 200, 20);
-  loadModel.resize(145, 40);
-  loadModel.locate(300, 15);
-  loadModel.strokeWeight = 0;
-  loadModel.color = "#E8F0FE";
-  loadModel.text = "LOAD MODEL";
-  loadModel.textSize = 18;
-  loadModel.textColor = "#1967d2";
-  loadModel.onPress = () => {
-    loadModel.text = "MODEL LOADED";
-    setTimeout(() => {
-      loadModel.text = "REFRESH MODEL";
-    }, 3000);
-  };
-  // connect.textFont = poppinsRegular;
-  loadModel.textFont = poppinsRegular;
-}
 
-function mousePressed() {
-  leftClassSelector.onClick(mouseX, mouseY);
-  rightClassSelector.onClick(mouseX, mouseY);
-}
+  setupClassificationBarAndLabels();
 
-function mouseMoved() {
-  leftClassSelector.onHover(mouseX, mouseY);
-  rightClassSelector.onHover(mouseX, mouseY);
+  setupEditCodeLink();
+
 }
