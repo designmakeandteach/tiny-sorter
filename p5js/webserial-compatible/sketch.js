@@ -1,69 +1,4 @@
-class PhotoGrid {
-  constructor(isLeft) {
-    this.images = [];
-    console.log(this.images.length);
-    if (isLeft) {
-      this.x = width / 2 - 480;
-    } else {
-      this.x = width / 2 + 300;
-    }
 
-    this.y = height / 2.5;
-    this.numRows = 3;
-    this.numCols = 2;
-    this.imageSize = 120;
-    this.padding = 20;
-  }
-
-  addImage(img) {
-    this.images.push(img);
-    if (this.images.length > 9) {
-      this.images.shift();
-    }
-  }
-
-  render() {
-    for (let i = 0; i < this.images.length; i++) {
-      let currImage = this.images[i];
-      let row = i % 3;
-      let col = int(i / 3);
-      fill(255);
-      noStroke();
-      rectMode(CORNER);
-      rect(
-        this.x + (this.imageSize + this.padding) * col,
-        this.y + (this.imageSize + this.padding) * row,
-        this.imageSize,
-        this.imageSize,
-        3,
-        3,
-        3,
-        3
-      );
-
-      image(
-        currImage,
-        this.x + (this.imageSize + this.padding) * col + 5,
-        this.y + (this.imageSize + this.padding) * row + 5,
-        this.imageSize - 10,
-        this.imageSize - 10
-      );
-    }
-  }
-}
-
-class DropDown {
-  constructor(isLeft, classList) {
-    this.isClicked = false;
-    this.width = this.height = 3;
-    this.x = 0;
-    this.y = 0;
-
-    this.class = null;
-  }
-
-  render() {}
-}
 
 function debounce(func, wait, immediate) {
   var timeout;
@@ -261,7 +196,7 @@ class ClassificationBar {
 
 class ClassInput {
   constructor(isLeft) {
-    this.width = 243;
+    this.width = 200;
     this.height = 53;
     this.radius = 9;
     this.textLineOffset = 40;
@@ -296,6 +231,7 @@ class ClassInput {
   onHover(x, y) {
     this.detectZone(x, y);
   }
+
   detectZone(x, y) {
     const leftBound = this.x - this.width / 2;
     const rightBound = this.x + this.width / 2;
@@ -335,53 +271,14 @@ class ClassInput {
         this.radius
       );
 
-      // } else {
-      //   rect(this.x, this.y + this.textLineOffset, this.width, this.height + this.textLineOffset * 2, this.radius, this.radius, this.radius, this.radius);
-      //   if (this.hoverOne) {
-      //     fill('rgba(154,160,166, 0.2)');
-      //     rect(this.x, this.y, this.width, this.height, this.radius, this.radius, 0, 0);
-      //   } else if (this.hoverTwo) {
-      //     fill('rgba(154, 160, 166, 0.2)');
-      //     rect(this.x, this.y + this.textLineOffset, this.width, this.height - 10, 0, 0, 0, 0);
-      //   } else if (this.hoverThree) {
-      //     fill('rgba(154, 160, 166, 0.2)');
-      //     rect(this.x, this.y + this.textLineOffset * 2 + 6, this.width, this.height - 11, 0, 0, this.radius, this.radius);
-      //   }
-      // }
       if (labels.length >= 2) {
         fill("#1967D2");
         if (this.isLeft) {
           textAlign(LEFT, CENTER);
           text(labels[0], this.x - this.width / 2 + 10, this.y - 4);
-          //           if (this.isActive) {
-          //             text(labels[1], this.x - this.width / 2 + 10, this.y + this.textLineOffset);
-          //             text(labels[2], this.x - this.width / 2 + 10, this.y + this.textLineOffset * 2);
-
-          //           }
-          image(
-            pencil,
-            this.x - this.width / 2 + 200,
-            this.y - this.height / 2 + 10,
-            pencil.width / 2,
-            pencil.height / 2
-          );
         } else {
           textAlign(RIGHT, CENTER);
-          // if (labels.length > 2) {
           text(labels[1], this.x + this.width / 2 - 13, this.y - 4);
-          // }
-
-          //           if (this.isActive) {
-          //             text(labels[1], this.x + this.width / 2 - 13, this.y + this.textLineOffset);
-          //             text(labels[2], this.x + this.width / 2 - 13, this.y + this.textLineOffset * 2);
-          //           }
-          image(
-            pencil,
-            this.x + this.width / 2 - 235,
-            this.y - this.height / 2 + 10,
-            pencil.width / 2,
-            pencil.height / 2
-          );
         }
       }
     }
@@ -415,15 +312,10 @@ let cameraBorder;
 let putSorter;
 let splashLeft;
 let splashRight;
-let selectPic;
 
 let editCode;
 let connect;
-let group;
-let pencil;
-// Darker BG
-// let bgColor = '#b8d1fc';
-// Lighter Bg
+
 let bgColor = "#e8f0fe";
 let port;
 let shouldFreezeFrame;
@@ -436,14 +328,11 @@ let isRightClassSelected = false;
 let poppinsRegular;
 let poppinsBold;
 let hasSetPauseTimer;
-// To store the classification
+
 let label = "";
 let isModelLoaded = false;
 let enteredText = "";
-// // Load the model first
-// function preload() {
-//   classifier = ml5.imageClassifier(imageModel + 'model.json');
-// }
+
 
 function myInputEvent() {
   enteredText = this.value().trim();
@@ -486,7 +375,7 @@ function connectClicked() {
  * Create the button at the top right of the screen that allows the user to connect to the serial port
  * @returns {Clickable}
  */
-function initConnectButton() {
+function setupConnectButton() {
 
   let connect = createButton(connectLabel);
   connect.position(width - 200, 20);
@@ -502,6 +391,31 @@ function initConnectButton() {
   return connect;
 }
 
+/**
+ * Add the query string "?test=true" to the URL to enable test mode.
+ */
+function setupTestMode() {
+  const params = new URLSearchParams(window.location.search);
+  const test = params.get("test");
+
+
+    // Add extra UI tif we are testing
+    if (test) {
+      addLeftButton = createButton("Add Left");
+      addLeftButton.position(0, height / 2);
+      addLeftButton.mousePressed(() => {
+        let pic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
+        leftGrid.addImage(pic);
+      });
+      addRightButton = createButton("Add Right");
+      addRightButton.style("width", "100px");
+      addRightButton.position(width-100, height / 2);
+      addRightButton.mousePressed(() => {
+        let pic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
+        rightGrid.addImage(pic);
+      });   
+    }
+}
 
 function setup() {
   createCanvas(window.innerWidth, window.innerHeight);
@@ -512,7 +426,6 @@ function setup() {
 
   cameraBorder = loadImage("camera_border.png");
   putsorter = loadImage("put_sorter.png");
-  group = loadImage("Group 61.png");
 
   loadModel = new Clickable();
 
@@ -557,14 +470,15 @@ function setup() {
     }
   };
 
-  leftGrid = new PhotoGrid(true);
-  pencil = loadImage("pencil_icon.png");
+  let photoGridY = height / 2.5;
+  leftGrid = new PhotoGrid(width / 2 - 480, photoGridY, 3, 2, 120, 20);
+  rightGrid = new PhotoGrid(width / 2 + 300, photoGridY, 3, 2, 120, 20);
+
   classificationIndicator = new ClassificationBar();
   leftClassSelector = new ClassInput(true);
   rightClassSelector = new ClassInput(false);
   splashRight = new Splash(false);
   splashLeft = new Splash(true);
-  rightGrid = new PhotoGrid(false);
   poppinsRegular = loadFont("Poppins-Regular.ttf");
   poppinsBold = loadFont("Poppins-Bold.ttf");
 
@@ -572,12 +486,10 @@ function setup() {
   shouldFeezeFrame = false;
   hasSetPauseTimer = false;
 
- 
 
   modelInput = createInput();
   modelInput.input(myInputEvent);
-  // modelInput.style('position', 'absolute');
-  // modelInput.style('z-index', 10);
+
   modelInput.position(20, 20);
   modelInput.style("height", "35px");
   modelInput.style("width", "267px");
@@ -590,24 +502,9 @@ function setup() {
   modelInput.style("color", "#669df6");
   modelInput.attribute("placeholder", "Paste model link here");
 
-  connect = initConnectButton();
+  connect = setupConnectButton();
   serialPort = initSerialPort();
   
-  leftAdd = debounce(
-    () => {
-      leftGrid.addImage(selectPic);
-    },
-    500,
-    true
-  );
-  rightAdd = debounce(
-    () => {
-      rightGrid.addImage(selectPic);
-    },
-    500,
-    true
-  );
-
   editCode = createA(
     "https://editor.p5js.org/designmakeandteach/sketches/yiTc27eXT",
     "EDIT CODE",
@@ -626,7 +523,9 @@ function setup() {
   if (isModelLoaded) {
     classifyVideo();
   }
-}
+
+  setupTestMode();
+} // end setup()
 
 function draw() {
   //   Darker BG
@@ -637,11 +536,11 @@ function draw() {
     // background('#e8f0fe');
     if (shouldFreezeFrame && !hasSetPauseTimer) {
       video.pause();
-      selectPic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
+      let selectPic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
       if (isLeftPic) {
-        leftAdd();
+        leftGrid.addImage(selectPic);
       } else {
-        rightAdd();
+        rightGrid.addImage(selectPic);
       }
       setTimeout(() => {
         video.play();
@@ -681,14 +580,6 @@ function draw() {
       videoSize + 6
     );
 
-    // // image(connect, width - connect.width - 20, 20);
-    // image(group, 20, 20);
-
-    // rectMode(CENTER);
-    // noFill();
-    // stroke(255);
-    // strokeWeight(6);
-    // rect(width / 2, height / 2, videoSize, videoSize);
     leftGrid.render();
     rightGrid.render();
     rectMode(CORNER);
