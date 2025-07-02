@@ -285,6 +285,7 @@ class ClassInput {
   }
 }
 
+const isTestMode = true;
 const connectLabel = "CONNECT MICROPROCESSOR"
 const disconnectLabel = "DISCONNECT MICROPROCESSOR"
 // Classifier Variable
@@ -379,7 +380,7 @@ function connectClicked() {
  * Create the button at the top right of the screen that allows the user to connect to the serial port
  * @returns {Clickable}
  */
-function initConnectButton() {
+function setupConnectButton() {
 
   let connect = createButton(connectLabel);
   connect.position(width - 200, 20);
@@ -393,6 +394,25 @@ function initConnectButton() {
   connect.style("color", "#1967D2");
   connect.mouseClicked(connectClicked);
   return connect;
+}
+
+function setupTestMode() {
+    // Add extra UI tif we are testing
+    if (isTestMode) {
+      addLeft = createButton("Add Left");
+      addLeft.position(0, height / 2);
+      addLeft.mousePressed(() => {
+        let pic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
+        leftGrid.addImage(pic);
+      });
+      addRight = createButton("Add Right");
+      addRight.style("width", "100px");
+      addRight.position(width-100, height / 2);
+      addRight.mousePressed(() => {
+        let pic = video.get(150, 0, videoSize / 1.6, videoSize / 1.6);
+        rightGrid.addImage(pic);
+      });   
+    }
 }
 
 
@@ -480,7 +500,7 @@ function setup() {
   modelInput.style("color", "#669df6");
   modelInput.attribute("placeholder", "Paste model link here");
 
-  connect = initConnectButton();
+  connect = setupConnectButton();
   serialPort = initSerialPort();
   
   leftAdd = debounce(
@@ -516,7 +536,9 @@ function setup() {
   if (isModelLoaded) {
     classifyVideo();
   }
-}
+
+  setupTestMode();
+} // end setup()
 
 function draw() {
   //   Darker BG
