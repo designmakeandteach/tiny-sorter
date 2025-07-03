@@ -26,7 +26,7 @@ This was tested with CircuitPython 9.x on the following devices:
 
 - Raspberry Pi Pico W
 - Raspberry Pi Pico 2
-
+- Adafruit Feather 2040
 
 ## Troubleshooting
 

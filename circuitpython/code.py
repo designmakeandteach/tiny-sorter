@@ -26,7 +26,9 @@ from adafruit_motor import servo
 # This pin must be attached to a PWM capable port
 
 # Raspberry Pi Pico has many pins that can do PWM
-SERVO_PIN = board.GP2
+SERVO_PIN = board.GP02
+# Example for Adafruit Feather 2040
+# SERVO_PIN = board.D5
 
 # On some systems, you may get an error trying to read a character with
 # select(). You can change this value to Falst to try an alternative version
