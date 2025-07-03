@@ -418,6 +418,7 @@ let splashRight;
 let selectPic;
 
 let editCode;
+let learnMoreLink;
 let connect;
 let group;
 let pencil;
@@ -573,6 +574,21 @@ function setup() {
   editCode.style("font-size", "18px");
   editCode.style("width", "200px");
   editCode.style("color", "#1967D2");
+
+  learnMoreLink = createA(
+    "https://experiments.withgoogle.com/tiny-sorter",
+    "LEARN MORE",
+    "_blank"
+  );
+
+  learnMoreLink.position(0, height - 40);
+  learnMoreLink.style("height", "40px");
+  learnMoreLink.style("border-width", "0px");
+  learnMoreLink.style("background-color", bgColor);
+  learnMoreLink.style("font-family", "Poppins");
+  learnMoreLink.style("font-size", "18px");
+  learnMoreLink.style("width", "200px");
+  learnMoreLink.style("color", "#1967D2");
 
   // Start classifying
   if (isModelLoaded) {

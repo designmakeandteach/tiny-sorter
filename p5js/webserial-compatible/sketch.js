@@ -16,7 +16,7 @@ const videoPauseDelay = 2000;
 const bgColor = "#e8f0fe";
 
 // Machine Learning Model Instance
-let classifier;
+let classifier = null;
 
 // Serial Port connected to the micro-controller
 let serialPort;
@@ -170,7 +170,7 @@ function processClassificationResult(error, results) {
  * That saves on the image size, but to my knowledge, the model was trained on the full image.
  */
 function classifyVideo() {
-  if (isModelLoaded && lastClassifiedImage === null && !hasSetVideoPauseTimer) {
+  if (isModelLoaded && classifier && lastClassifiedImage === null && !hasSetVideoPauseTimer) {
     lastClassifiedImage = getVideoImage();
     classifier.classify(lastClassifiedImage, processClassificationResult);
   }
@@ -282,18 +282,18 @@ function setupLoadModelButton() {
   loadModelButton.id("loadModelButton");
   loadModelButton.class("button"); // see style.css for styling
   loadModelButton.position(300, 15);
-
-
   loadModelButton.mouseClicked(() => {
     try {
       let modelUrl = ensureTrailingSlash(modelInput.value());
       console.log(`Loading Tensorflow Model at: ${modelUrl}`);
-      classifier = ml5.imageClassifier(modelUrl + "model.json");
+      ml5.imageClassifier(modelUrl + "model.json").then((c) => {
+        classifier = c;
+      });
+
       let metadataUrl = modelUrl + "metadata.json";
       httpGet(
         metadataUrl,  // path
         "json", // datatype
-        false, // data
         modelFetchSuccess, // callback on success
         (error) => {
           alert(`Error fetching Teachable Machine2 resource ${metadataUrl}: ${error}`);
@@ -409,8 +409,7 @@ function setupLearnMoreLink() {
   );
   learnMoreLink.position(0, height - 40);
   learnMoreLink.id("learnMoreLink");
-  editCodeLink.class("link"); // see style.css for styling
-
+  learnMoreLink.class("link"); // see style.css for styling
 }
 /**
  * Setup the model input field at the top left of the screen.
@@ -482,17 +481,17 @@ function setupTestMode() {
 
 /**
  * Called by p5 when the page is loaded. Initialize the UI here.
+ * p5.js 2.0 requires this to be an async function.
  */
-function setup() {
+async function setup() {
   createCanvas(window.innerWidth, window.innerHeight);
-  // Create the video
+
   video = createCapture(VIDEO);
   video.hide();
-  shouldFeezeFrame = false;
   hasSetVideoPauseTimer = false;
 
-  cameraBorderImage = loadImage("camera_border.png");
-  putsorter = loadImage("put_sorter.png");
+  cameraBorderImage = await loadImage("camera_border.png");
+  putsorterImage = await loadImage("put_sorter.png");
 
   // Initialize UI Components
   setupModelInput();
@@ -514,13 +513,13 @@ function setup() {
 function draw() {
   if (width > 700) {
     background(bgColor);
-
+    
     image(
-      putsorter,
-      width / 2 - putsorter.width / 5,
+      putsorterImage,
+      width / 2 - putsorterImage.width / 5,
       0,
-      putsorter.width / 2.5,
-      putsorter.height / 2.5
+      putsorterImage.width / 2.5,
+      putsorterImage.height / 2.5
     );
     noStroke();
     textAlign(CENTER, CENTER);
