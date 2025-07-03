@@ -186,10 +186,7 @@ function classifyVideo() {
  * @param {string} text - The text to display on the connect button.
  */
 function setConnectButtonText(text) {
-  const connectButton = document.querySelector("#connect");
-  if (connectButton) {
-    connectButton.textContent = text;
-  }
+  connectButton.html(text);
 }
 
 /**
@@ -250,10 +247,7 @@ function modelFetchSuccess(response) {
     modelLabels = response.labels;
     makeClassificationLabelsVisible();
     if (modelLabels.length > 1) {
-      setLoadModelButtonText("MODEL LOADED");
-      setTimeout(() => {
-        setLoadModelButtonText("REFRESH MODEL");
-      }, 3000);
+      setLoadModelButtonText("MODEL LOADED", "REFRESH MODEL");
     }
     isModelLoaded = true;
   }
@@ -262,13 +256,18 @@ function modelFetchSuccess(response) {
 /**
  * Set the text of the load model button in the DOM.
  * @param {string} text 
+ * @param {string} timeoutText - If present, the text to display after a timeout.
  */
-function setLoadModelButtonText(text) {
-  const loadModelButton = document.querySelector("#loadModel");
-  if (loadModelButton) {
-    loadModelButton.textContent = text;
+function setLoadModelButtonText(text, timeoutText = null) {
+  loadModelButton.html(text);
+  if (timeoutText) {
+    setTimeout(() => {
+      loadModelButton.html(timeoutText);
+    }, 3000);
   }
 }
+
+
 /**
  * Create the load model button. Called for first time setup only.
  */
@@ -288,6 +287,8 @@ function setupLoadModelButton() {
       console.log(`Loading Tensorflow Model at: ${modelUrl}`);
       ml5.imageClassifier(modelUrl + "model.json").then((c) => {
         classifier = c;
+      }).catch((e) => {
+        console.error(`Error loading Tensorflow Model: ${e}`);
       });
 
       let metadataUrl = modelUrl + "metadata.json";
@@ -297,19 +298,13 @@ function setupLoadModelButton() {
         modelFetchSuccess, // callback on success
         (error) => {
           alert(`Error fetching Teachable Machine2 resource ${metadataUrl}: ${error}`);
-          setLoadModelButtonText("ERROR LOADING MODEL");
+          setLoadModelButtonText("ERROR LOADING MODEL", "LOAD MODEL");
           isModelLoaded = false;
-          setTimeout(() => {
-            setLoadModelButtonText("LOAD MODEL");
-          }, 3000);
         }
       );
     } catch (e) {
-      setLoadModelButtonText("ERROR LOADING MODEL");
+      setLoadModelButtonText("ERROR LOADING MODEL", "LOAD MODEL");
       isModelLoaded = false;
-      setTimeout(() => {
-        setLoadModelButtonText("LOAD MODEL");
-      }, 3000);
     }
   });
 }  // end setupLoadModelButton()
@@ -513,7 +508,7 @@ async function setup() {
 function draw() {
   if (width > 700) {
     background(bgColor);
-    
+
     image(
       putsorterImage,
       width / 2 - putsorterImage.width / 5,
