@@ -18,7 +18,12 @@ This updates the webpage to use the WebSerial protocol so that it can
 be used with any microprocessor that presents a serial port to the 
 device running the Chrome browser.
 
-The code has been reorganized and updated to fix some error conditions and remove unused code.
+The code has been reorganized and updated to fix some error conditions and remove unused code and libraries.
+
+The libraries used by the page have been upgraded
+
+- p5.js has been updated from 0.9.0 to 2.0.3
+- ml5 has been updated from 0.4.3 to 0.12.2
 
 ## UI Testing
 
