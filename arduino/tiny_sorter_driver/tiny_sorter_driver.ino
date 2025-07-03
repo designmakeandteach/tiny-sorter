@@ -4,7 +4,7 @@
 // controlled by a webpage with a physical device.
 //
 // Originally published by Google AI Experiments in 2019 (Copyright & License Unknown)
-// https://experiments.withgoogle.com/tiny-sorter/view/
+// https://experiments.withgoogle.com/tiny-sorter/
 // https://experiments.withgoogle.com/tiny-sorter/view/assets/img/sorter_sketch.zip
 //
 // Updates Copyright 2025 by Eric Ayers 

@@ -33,6 +33,7 @@ let video;
 let rightPhotoGrid;
 let leftClassificationLabel;
 let rightClassificationLabel;
+let learnMoreLink;
 let editCodeLink;
 
 // Other State
@@ -204,7 +205,7 @@ function setupConnectButton() {
   connectButton.position(width - 200, 20);
   connectButton.id("connectButton");
   connectButton.class("button"); // see style.css for styling
-  
+
   connectButton.mouseClicked(() => {
     if (!serialPort.opened()) {
       console.log("Opening serial port");
@@ -389,10 +390,28 @@ function setupEditCodeLink() {
   );
   editCodeLink.position(width - 110, height - 40);
   editCodeLink.id("editCodeLink");
-
-
+  editCodeLink.class("link"); // see style.css for styling
 } // end setupEditCodeLink()
 
+/**
+ * Setup a link back to the website at the bottom of the screen.
+ */
+function setupLearnMoreLink() {
+  if (learnMoreLink) {
+    learnMoreLink.remove();
+    learnMoreLink = null;
+  }
+
+  learnMoreLink = createA(
+    "https://designmakeandteach.com/projects/tiny-sorter/",
+    "LEARN MORE",
+    "_blank"
+  );
+  learnMoreLink.position(0, height - 40);
+  learnMoreLink.id("learnMoreLink");
+  editCodeLink.class("link"); // see style.css for styling
+
+}
 /**
  * Setup the model input field at the top left of the screen.
  */
@@ -481,6 +500,7 @@ function setup() {
   setupConnectButton();
   setupPhotoGrids();
   setupClassificationBarAndLabels();
+  setupLearnMoreLink();
   setupEditCodeLink();
   setupTestMode();
 
@@ -560,5 +580,6 @@ function windowResized() {
   setupConnectButton();
   setupClassificationBarAndLabels();
   setupPhotoGrids();
+  setupLearnMoreLink();
   setupEditCodeLink();
 }

@@ -4,28 +4,26 @@
   --input-color: #669df6;
 }
 
-html, body {
-  margin: 0;
-  padding: 0;
-}
-canvas {
-  display: block;
-}
-
 * {
   font-family: Poppins, sans-serif;
   font-size: 18px;
 }
 
-.classification-label {
-  font-weight: bold;
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+canvas {
+  display: block;
 }
 
 .button {
   border-width: 0px;
+  color: var(--primary-color);
   background-color: var(--background-color);
   font-size: 18px;
-  color: var(--primary-color);
 }
 
 #loadModelButton {
@@ -36,16 +34,7 @@ canvas {
 #connectButton {
   height: 40px;
   width: 200px;
-}
-
-#editCodeLink {
-  height: 40px;
-  border-width: 0px;
-  background-color: var(--background-color);
-  font-size: 18px;
-  width: 200px;
-  color: var(--primary-color);
-  text-decoration: none;
+  padding-right: 10px;
 }
 
 #modelInput {
@@ -57,4 +46,25 @@ canvas {
   font-size: 16px;
   padding-left: 5px;
   color: var(--input-color);
+  background-color: var(--background-color);
+}
+
+.link {
+  font-size: 18px;
+  border-width: 0px;
+  text-decoration: none;
+  color: var(--primary-color);
+  background-color: var(--background-color);
+}
+
+#learnMoreLink {
+  height: 40px;
+  width: 200px;
+  padding-left: 10px;
+}
+
+#editCodeLink {
+  height: 40px;
+  width: 200px;
+  padding-right: 10px;
 }

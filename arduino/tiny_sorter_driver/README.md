@@ -10,7 +10,7 @@ If you use the default code,
 ## Compatibility with Original Google Experiment
 
 The driver is compatible with
-the original [Tiny Sorter Experiment](https://experiments.withgoogle.com/tiny-sorter/view/)
+the original [Tiny Sorter Experiment](https://experiments.withgoogle.com/tiny-sorter/)
 if you update the line:
 
 ```C
