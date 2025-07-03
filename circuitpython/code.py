@@ -2,6 +2,15 @@
 # Copyright 2025 Eric Z. Ayers
 #
 # See https://github.com/designmakeandteach/tiny-sorter
+#
+# This driver waits on a command from the Serial port.
+# Messages are single digits. By default, these messages are:
+#
+# '1' == A piece of cereal was detected
+# '2' == A marshmallow was detected
+#
+# Once it arrives, it moves the servo to the specified position.
+# Between messages it will move the servo to vibrate the sorter
 
 import board
 import pwmio
@@ -9,35 +18,58 @@ import select
 import sys
 import time
 
+# Install adafruit_motor in the lib/ directory
+# You can download it from https://circuitpython.org/libraries
 from adafruit_motor import servo
 
-SERVO_PIN = board.GP10
-       
-CEREAL_VALUE = '1'
-MALLOW_VALUE = '2'
+# ACTION REQUIRED: Update SERVO_PIN to match your microprocessor
+# This pin must be attached to a PWM capable port
 
+# Raspberry Pi Pico has many pins that can do PWM
+SERVO_PIN = board.GP2
+
+# On some systems, you may get an error trying to read a character with
+# select(). You can change this value to Falst to try an alternative version
+USE_SELECT = True
+
+# Message values sent from the webpage
+CEREAL_VALUE = "1"
+MALLOW_VALUE = "2"
+
+# Angles to use to move the servo after an item is detected
 CENTER_POSITION = 90
 CEREAL_POSITION = 10
 MALLOW_POSITION = 170
 
+# Controls the vibration of the servo betwene pieces
 NUM_JIGGLES = 4
 JIGGLE_ANGLE = 15
-JIGGLE_DELAY = .1
+JIGGLE_DELAY = 0.1
 
 # -------------------------------------------------------------------------
 # Global Variables
 # -------------------------------------------------------------------------
 
-pwm = pwmio.PWMOut(board.GP10, duty_cycle=2 ** 15, frequency=50)
+pwm = pwmio.PWMOut(SERVO_PIN, duty_cycle=2**15, frequency=50)
 sorter_servo = servo.Servo(pwm)
 
 # -------------------------------------------------------------------------
 # Helper routines
 # -------------------------------------------------------------------------
-def move_to_position_and_wait(angle):
-    sorter_servo.angle = angle
-    time.sleep(2)
-    
+
+
+# Attempts to read a command consisting of a digit
+# Discards all but the last digit read.
+# If no input is available, returns None
+def read_char_nonblocking():
+    if USE_SELECT:
+        return read_char_nonblocking_select()
+    else:
+        return read_char_nonblocking_no_select()
+
+
+# Moves the servo back and forth to vibrate the sorter and move the
+# items down the chute.
 def jiggle():
     print("Jiggle!")
     for i in range(0, NUM_JIGGLES):
@@ -46,29 +78,46 @@ def jiggle():
         sorter_servo.angle = CENTER_POSITION - JIGGLE_ANGLE
         time.sleep(JIGGLE_DELAY)
     time.sleep(JIGGLE_DELAY)
-  
-# Here's an alternate version. select() may not be available
-# on all systems.
-#
-#def read_char_nonblocking():
-#    if sys.stdin.in_waiting > 0:
-#        # Read available bytes
-#        raw_input = sys.stdin.read(sys.stdin.in_waiting)
-#        # we only want the last character, throw the rest away
-#        return raw_input[-1]
-#    else:
-#        return None
 
-# Attempts to read a command consisting of a digit
-# Discards all but the last digit read.
-# If no input is available, returns None
-def read_char_nonblocking():
+
+# Helper routine to move the sorter and give the item time to fall
+def move_to_position_and_wait(angle, timeout=2):
+    sorter_servo.angle = angle
+    time.sleep(timeout)
+
+
+# After receivng a command to dump the sorter, moves into
+# that position, then re-centers the servo and prepares
+# for the next command
+def dump_sorter(angle):
+    move_to_position_and_wait(angle)
+    move_to_position_and_wait(CENTER_POSITION, 1)
+    # Throwaway any data that's come while we have been waiting
+    throwaway = read_char_nonblocking()
+
+
+# Here's one version to read a character without blocking.
+# On some CircuitPython installations
+# select() may not be available
+def read_char_nonblocking_no_select():
+    if sys.stdin.in_waiting > 0:
+        # Read available bytes
+        raw_input = sys.stdin.read(sys.stdin.in_waiting)
+        # we only want the last character, throw the rest away
+        return raw_input[-1]
+    else:
+        return None
+
+
+# A version to read a character non-blocking using select()
+def read_char_nonblocking_select():
     val = None
     while select.select([sys.stdin], [], [], 0)[0]:
         tmp_val = sys.stdin.read(1)
         if tmp_val.isdigit():
             val = tmp_val
     return val
+
 
 # -------------------------------------------------------------------------
 # Main Logic
@@ -83,10 +132,9 @@ while True:
     print("Received: input: ", value)
     if value == CEREAL_VALUE:
         print("Cereal Detected")
-        move_to_position_and_wait(CEREAL_POSITION)
+        dump_sorter(CEREAL_POSITION)
     elif value == MALLOW_VALUE:
         print("Mallow Detected")
-        move_to_position_and_wait(MALLOW_POSITION)
+        dump_sorter(MALLOW_POSITION)
     else:
         jiggle()
-    
