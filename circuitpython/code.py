@@ -61,11 +61,11 @@ sorter_servo = servo.Servo(pwm)
 # Attempts to read a command consisting of a digit
 # Discards all but the last digit read.
 # If no input is available, returns None
-def read_char_nonblocking():
+def read_command():
     if USE_SELECT:
-        return read_char_nonblocking_select()
+        return read_command_nonblocking_select()
     else:
-        return read_char_nonblocking_no_select()
+        return read_command_nonblocking_no_select()
 
 
 # Moves the servo back and forth to vibrate the sorter and move the
@@ -93,24 +93,25 @@ def dump_sorter(angle):
     move_to_position_and_wait(angle)
     move_to_position_and_wait(CENTER_POSITION, 1)
     # Throwaway any data that's come while we have been waiting
-    throwaway = read_char_nonblocking()
+    throwaway = read_command()
 
 
-# Here's one version to read a character without blocking.
-# On some CircuitPython installations
-# select() may not be available
-def read_char_nonblocking_no_select():
+# Read from the serial port without blocking.
+# On some CircuitPython installations select() may not be available
+def read_command_nonblocking_no_select():
+    val = None
     if sys.stdin.in_waiting > 0:
-        # Read available bytes
+        # Read all available bytes
         raw_input = sys.stdin.read(sys.stdin.in_waiting)
-        # we only want the last character, throw the rest away
-        return raw_input[-1]
-    else:
-        return None
+        # We only want the last valid command, throw the rest away
+        for tmp_val in list(raw_input):
+            if tmp_val.isdigit():
+                val = tmp_val
+    return val
 
 
-# A version to read a character non-blocking using select()
-def read_char_nonblocking_select():
+# A version that reads a character non-blocking using select()
+def read_command_nonblocking_select():
     val = None
     while select.select([sys.stdin], [], [], 0)[0]:
         tmp_val = sys.stdin.read(1)
@@ -127,13 +128,13 @@ print("Waiting for data")
 move_to_position_and_wait(CENTER_POSITION)
 
 while True:
-    # TODO(zundel): change to non-blocking read
-    value = read_char_nonblocking()
-    print("Received: input: ", value)
-    if value == CEREAL_VALUE:
+    # Read a single digit command from the input
+    command = read_command()
+    print("Received: input: ", command)
+    if command == CEREAL_VALUE:
         print("Cereal Detected")
         dump_sorter(CEREAL_POSITION)
-    elif value == MALLOW_VALUE:
+    elif command == MALLOW_VALUE:
         print("Mallow Detected")
         dump_sorter(MALLOW_POSITION)
     else:
