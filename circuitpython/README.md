@@ -24,9 +24,13 @@ SERVO_PIN = board.GP2
 
 This was tested with CircuitPython 9.x on the following devices:
 
+- Raspberry Pi Pico 
 - Raspberry Pi Pico W
 - Raspberry Pi Pico 2
-
+- Adafruit Feather 2040
+- Adafruit Feather ESP32-S3 (8MB no PSRAM)
+- Adafruit Feather HUZZAH 32 (ESP32-WROOM)
+- Seeed Studio Xiao ESP32-S3
 
 ## Troubleshooting
 
@@ -35,7 +39,7 @@ Make sure your pins are connected correctly to the Servo
 
 Servo Wire Color:
 
-- Red: +5V Power (labled VCC, VBUS or VSYS on most devices)
+- Red: +5V Power (labled VCC, VBUS, VSYS, or USB on most devices)
 - Black: 0V Ground (labeled GND on most devices)
 - White: Signal (pin set with SERVO_PIN in code.py)
 
@@ -66,7 +70,6 @@ USE_SELECT = False
 ### Error from console: object has no attribute 'in_waiting'
 
 Try setting `USE_SELECT` to `True` in code.py
-
 
 ## Contributing and Feedback
 

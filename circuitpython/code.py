@@ -24,9 +24,29 @@ from adafruit_motor import servo
 
 # ACTION REQUIRED: Update SERVO_PIN to match your microprocessor
 # This pin must be attached to a PWM capable port
+#
+#  * RP2040 based chips (RPI Pico/ others)  have many pins that can do PWM
+#  * ESP32-S2 has only a few
 
-# Raspberry Pi Pico has many pins that can do PWM
-SERVO_PIN = board.GP2
+# Raspberry Pi Pico and variants
+# board.GP02 is pin #4
+SERVO_PIN = board.GP02 
+
+# Example for Adafruit Feather 2040
+# board.D5 is labeled '5' and 'GP07' on the board
+#SERVO_PIN = board.D5  
+
+# Example for Adafruit Feather ESP32-S3 8MB No PSRAM
+# board.D5 is labeled '5' on the board
+#SERVO_PIN = board.D5  
+
+# Example for Adafruit Feather Huzzah 32 (w/ ESP32-WROOM)
+# board.D14 is labeled '14/A6' 
+#SERVO_PIN = board.D14  
+
+# Example for Seeed Studio XIA ESP32-S3
+# board.D0 is labeled 'D0', the first pin pin by the 'R'button
+#SERVO_PIN = board.D0
 
 # On some systems, you may get an error trying to read a character with
 # select(). You can change this value to Falst to try an alternative version
