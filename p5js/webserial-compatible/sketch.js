@@ -14,6 +14,8 @@ const classifyDelay = 100;
 const videoSize = 250;
 const videoPauseDelay = 2000;
 const bgColor = "#e8f0fe";
+const editCodeLinkUrl = "https://editor.p5js.org/designmakeandteach/full/6qflZwLtf";
+const learnMoreLinkUrl = "https://designmakeandteach.com/projects/tiny-sorter/";
 
 // Machine Learning Model Instance
 let classifier = null;
@@ -379,7 +381,7 @@ function setupEditCodeLink() {
   }
 
   editCodeLink = createA(
-    "https://editor.p5js.org/designmakeandteach/sketches/yiTc27eXT",
+    editCodeLinkUrl,
     "EDIT CODE",
     "_blank"
   );
@@ -398,7 +400,7 @@ function setupLearnMoreLink() {
   }
 
   learnMoreLink = createA(
-    "https://designmakeandteach.com/projects/tiny-sorter/",
+    learnMoreLinkUrl,
     "LEARN MORE",
     "_blank"
   );
