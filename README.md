@@ -20,8 +20,8 @@ In addition to paper, tape, and scissors, you'll need:
 
 - A laptop or desktop computer with a webcam (Mac, Windows, or Linux should work)
 - A microcontroller compatible with CircuitPython or the Arduino environment such as the [Pico 2 W](https://www.adafruit.com/product/6315) or [Adafruit Feather ESP32-S2](https://www.adafruit.com/product/6282)
-- A [micro servo](https://www.adafruit.com/product/169)  
-- [Jumper wires](https://www.adafruit.com/product/1953) to connect the micro servo to the microcontroller
+- A [micro servo](https://www.adafruit.com/product/169), SG90 or similar
+- Male-Female [Jumper wires](https://www.adafruit.com/product/1953) to connect the micro servo to the microcontroller
 - A USB cable to connect your laptop to the microcontroller
 
 We recommend [Adafruit](https://adafruit.com) for both tutorials and the
@@ -32,11 +32,11 @@ of places including SparkFun or Amazon in the USA.
 
 See [Tiny Sorter Experiment from 2019](https://experiments.withgoogle.com/tiny-sorter) for the
 original project guidelines. See [Design, Make, and Teach](https://designmakeandteach.com/projects/tiny-sorter)
-for up to date instructions for using more modern mictocontrollers like
+for up to date instructions for using more modern microcontrollers like
 the Raspberry Pi Pico and for resources how to incorporate tiny-sorter into
 your lesson plans!
 
-## History
+## Project History
 
 This project builds on the [Tiny Sorter](https://experiments.withgoogle.com/tiny-sorter)
 Google Experiment launched in 2019, which combined Teachable Machine with
@@ -50,4 +50,4 @@ development environments.
 [Arduino](https://arduino.cc) environment (C++)
 - **circuitpython**: Source code for installing on a microcontroller
 using [CircuitPython](https://circuitpython.org) (Python)
-- **p5js**: Source code for the webpage to run your model
+- **p5js**: Source code for the web page to run your model
