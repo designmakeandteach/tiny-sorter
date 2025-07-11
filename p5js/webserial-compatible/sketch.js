@@ -125,7 +125,7 @@ function updateClassification(results) {
     try {
       if (serialPort.opened()) {
         console.log("Sending Class 2 Detected")
-        serialPort.write("2");
+        serialPort.write("2\r\n");
       }
       rightClassificationLabel.triggerSplash();
       if (lastClassifiedImage) {
@@ -137,7 +137,7 @@ function updateClassification(results) {
     try {
       if (serialPort.opened()) {
         console.log("Sending Class 1 Detected")
-        serialPort.write("1");
+        serialPort.write("1\r\n");
       }
       leftClassificationLabel.triggerSplash();
       if (lastClassifiedImage) {

@@ -14,7 +14,6 @@
 
 import board
 import pwmio
-import select
 import sys
 import time
 
@@ -29,28 +28,40 @@ from adafruit_motor import servo
 #  * ESP32-S2 has only a few
 
 # Raspberry Pi Pico and variants
-# board.GP02 is pin #4
-SERVO_PIN = board.GP02 
+# board.GP2 is pin #4
+SERVO_PIN = board.GP2
 
 # Example for Adafruit Feather 2040
 # board.D5 is labeled '5' and 'GP07' on the board
-#SERVO_PIN = board.D5  
+# SERVO_PIN = board.D5
 
 # Example for Adafruit Feather ESP32-S3 8MB No PSRAM
 # board.D5 is labeled '5' on the board
-#SERVO_PIN = board.D5  
+# SERVO_PIN = board.D5
 
 # Example for Adafruit Feather Huzzah 32 (w/ ESP32-WROOM)
-# board.D14 is labeled '14/A6' 
-#SERVO_PIN = board.D14  
+# board.D14 is labeled '14/A6'
+# SERVO_PIN = board.D14
 
 # Example for Seeed Studio XIA ESP32-S3
 # board.D0 is labeled 'D0', the first pin pin by the 'R'button
-#SERVO_PIN = board.D0
+# SERVO_PIN = board.D0
+
+# Example for Micro:bit
+# Also need to set USE_NONBLOCKING to False
+# SERVO_PIN = board.P0
+
+
+# On most systems, we have a way to get non-blocking I/O working, but
+# not all (micro:bit)
+USE_NONBLOCKING = True
 
 # On some systems, you may get an error trying to read a character with
-# select(). You can change this value to Falst to try an alternative version
+# select(). You can change this value to False to try an alternative version
 USE_SELECT = True
+
+if USE_NONBLOCKING and USE_SELECT:
+    import select
 
 # Message values sent from the webpage
 CEREAL_VALUE = "1"
@@ -82,10 +93,13 @@ sorter_servo = servo.Servo(pwm)
 # Discards all but the last digit read.
 # If no input is available, returns None
 def read_command():
-    if USE_SELECT:
-        return read_command_nonblocking_select()
+    if USE_NONBLOCKING:
+        if USE_SELECT:
+            return read_command_nonblocking_select()
+        else:
+            return read_command_nonblocking_no_select()
     else:
-        return read_command_nonblocking_no_select()
+        return read_command_blocking()
 
 
 # Moves the servo back and forth to vibrate the sorter and move the
@@ -113,7 +127,8 @@ def dump_sorter(angle):
     move_to_position_and_wait(angle)
     move_to_position_and_wait(CENTER_POSITION, 1)
     # Throwaway any data that's come while we have been waiting
-    throwaway = read_command()
+    if USE_NONBLOCKING:
+        throwaway = read_command()
 
 
 # Read from the serial port without blocking.
@@ -135,6 +150,17 @@ def read_command_nonblocking_select():
     val = None
     while select.select([sys.stdin], [], [], 0)[0]:
         tmp_val = sys.stdin.read(1)
+        if tmp_val.isdigit():
+            val = tmp_val
+    return val
+
+
+# Using non-blocking input is less than ideal, but sometimes it's all we have
+def read_command_blocking():
+    val = None
+    raw_input = input()
+    # We only want the last valid command, throw the rest away
+    for tmp_val in list(raw_input):
         if tmp_val.isdigit():
             val = tmp_val
     return val

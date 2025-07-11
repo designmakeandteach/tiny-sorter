@@ -15,8 +15,12 @@ For more details on how to use this in a classroom environment, see [Design, Mak
 ## Changes from 2019 Google Experiment
 
 This updates the webpage to use the WebSerial protocol so that it can
-be used with any microprocessor that presents a serial port to the 
+be used with any microprocessor that presents a serial port to the
 device running the Chrome browser.
+
+The serial protocol is different. The original page sent 8 bit binary values '1' and '2' to indicate which class was selected. The protocol was changed to use ASCII characters '1' and '2' with carriage return/linefeed following. This helps with debugging and testing, and also allows microcontrollers that do not support non-blocking I/O to work (micro:bit).
+
+The Arduino sketch has been updated to allow switching between the original binary protocol with WebUSB and the updated protocol compatible with WebSerial.
 
 The code has been reorganized and updated to fix some error conditions and remove unused code and libraries.
 
