@@ -1,21 +1,53 @@
-# tiny-sorter
+# Tiny Sorter
 
-A fun project that teaches you about AI, electronics, and mechanical engineering. No experience necessary! you will learn how to train a Tensorflow AI model using Google's Teachable Machine to recognize two different categoies of items and build a new machine to sort them. This makes for a great short lesson in a High School level Engineering or Computer Science course. You can make the machine with easy to find reusable parts making it great for the classroom or homescoolers.
+A fun project that introduces you to AI, electronics, and mechanical engineering—no
+experience necessary! You'll learn how to train a TensorFlow model using Google's
+[Teachable Machine](https://teachablemachine.withgoogle.com/) to recognize two
+different categories of items, then build a machine to sort them.
 
-See [Design, Make, and Teach](https://designmakeandteach.com/projects/tiny-sorter)
-for instructions for how to incorporate tiny-sorter into your lesson plans!
+<video controls width="600">
+  <source src="https://storage.googleapis.com/gweb-experiments.appspot.com/7153-hero.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
-## Materials 
+This makes a great short lesson (1-2 days of class time) for high school-level Engineering or Computer Science
+courses. The machine can be built using low cost, easy-to-find, reusable parts—perfect for
+classrooms or homeschoolers.
 
-Other than paper, tape, and scissors, you will need a PC or laptop with a webcam, a microprocessor compatible with Circuit Python or the Arduino environment, a micro servo, and some jumper wires to connect them together. We recommend [Adafruit](https://adafruit.com) for their tutorials and the products needed to complete the project.
+## Materials
 
-## History 
-This builds from the [Tiny Sorter](https://experiments.withgoogle.com/tiny-sorter) Google Experiment launched in 2019 to combine Teachable Machine
-with an Arduino.  It has been updated to modernize the logic to work in
-recent releases of the Chrome browser and more microprocessors and environments.
+In addition to paper, tape, and scissors, you'll need:
+
+- A laptop or desktop computer with a webcam (Mac, Windows, or Linux should work)
+- A microcontroller compatible with CircuitPython or the Arduino environment such as the [Pico 2 W](https://www.adafruit.com/product/6315) or [Adafruit Feather ESP32-S2](https://www.adafruit.com/product/6282)
+- A [micro servo](https://www.adafruit.com/product/169), SG90 or similar
+- Male-Female [Jumper wires](https://www.adafruit.com/product/1953) to connect the micro servo to the microcontroller
+- A USB cable to connect your laptop to the microcontroller
+
+We recommend [Adafruit](https://adafruit.com) for both tutorials and the
+components needed to complete the project, but you can source them from a number
+of places including SparkFun or Amazon in the USA.
+
+## Instructions
+
+See [Tiny Sorter Experiment from 2019](https://experiments.withgoogle.com/tiny-sorter) for the
+original project guidelines. See [Design, Make, and Teach](https://designmakeandteach.com/projects/tiny-sorter)
+for up to date instructions for using more modern microcontrollers like
+the Raspberry Pi Pico and for resources how to incorporate tiny-sorter into
+your lesson plans!
+
+## Project History
+
+This project builds on the [Tiny Sorter](https://experiments.withgoogle.com/tiny-sorter)
+Google Experiment launched in 2019, which combined Teachable Machine with
+Arduino. It's been updated to modernize the logic for compatibility with
+newer versions of Chrome and a wider range of microcontroller and
+development environments.
 
 ## Repo Contents
 
-- arduino: Sketch forinstalling on a microprocessor using the [Arduino](https://arduino.cc) environment (C++)
-- circuitpython: Source code for installing on a microprocessor using [CircuitPython](https://circuitpython.org) (Python)
-- p5js: Source code for the web page to run your model. 
+- **arduino**: Sketch for installing on a microcontroller using the
+[Arduino](https://arduino.cc) environment (C++)
+- **circuitpython**: Source code for installing on a microcontroller
+using [CircuitPython](https://circuitpython.org) (Python)
+- **p5js**: Source code for the web page to run your model
