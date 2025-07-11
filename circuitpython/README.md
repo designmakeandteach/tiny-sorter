@@ -30,7 +30,7 @@ This was tested with CircuitPython 9.x on the following devices:
 - Adafruit Feather ESP32-S3 (8MB no PSRAM)
 - Adafruit Feather HUZZAH 32 (ESP32-WROOM)
 - Seeed Studio Xiao ESP32-S3
-- BBC micro:bit v2 (set USE_NONBOCKING False)
+- BBC micro:bit v2 (set USE_NONBLOCKING False)
 
 ## Troubleshooting
 
