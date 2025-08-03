@@ -1,6 +1,6 @@
 # Arduino Driver for tiny-sorter
 
-This is an updated driver for the [Tiny Sorter](https://designmakeandteach/projects/tiny-sorter) project from
+This is an updated driver for the [Tiny Sorter](https://designmakeandteach.com/projects/tiny-sorter) project from
 Design, Make, and Teach.
 
 ## Compatible Microcontrollers
@@ -26,4 +26,4 @@ if you are having problems using the WebUSB driver on Windows 10/11.
 
 As of July 2025, The original P5 website for the experiment doesn't work with
 versions of Chrome released after December 2024. An updated version of the original
-p5 project can be found [on editor.p5js](editor.p5js.org/designmakeandteach/full/yiTc27eXT/).
+p5 project can be found [on editor.p5js](https://editor.p5js.org/designmakeandteach/full/6qflZwLtf).
